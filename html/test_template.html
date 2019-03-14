@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {font-family: "Lato", sans-serif;}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ffffff;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  color: #ffffff;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #777;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #555;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ffffff;
+  border-top: none;
+  animation: fadeEffect 1s;
+}
+
+@keyframes fadeEffect {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+#testSummary {
+  padding: 50px 0;
+  text-align: left;
+  background-color: #ffffff;
+  color: #ffffff;
+  margin-top: 20px;
+  padding: 50px
+}
+
+</style> 
+</head>
+<body>
+
+&&&&&
+
+<div id="tabContent" class="tab">
+  <button class="tablinks" onclick="openCity(event, 'Instrumentation')" id="default">Instrumentation</button>
+  <button class="tablinks" onclick="openCity(event, 'Logcat')">Logcat</button>
+  <button class="tablinks" onclick="openCity(event, 'Video')">Video</button>
+  <button class="tablinks" onclick="openCity(event, 'Shared_preferences')">Shared preferences</button>
+  <button class="tablinks" onclick="openCity(event, 'Database')">Database</button>
+  <button class="tablinks" onclick="openCity(event, 'Bugreport')">Bugreport</button>
+  <!-- <button class="tablinks" onclick="openCity(event, 'Device')">Device</button> -->
+</div>
+
+<div id="Instrumentation" class="tabcontent">
+  <h3>Instrumentation</h3>
+  <object data="running-test.txt" width="100%" height="500">
+      Not avaiable, this indicates an execution error.
+  </object>
+</div>
+
+<div id="Logcat" class="tabcontent">
+    <h3>Logcat</h3>
+    <object data="logcat.txt" width="100%" height="500">
+            Not avaiable, this indicates an execution error.
+    </object>
+</div>
+
+<div id="Video" class="tabcontent">
+    <h3>Video</h3>
+    <object data="recording.mp4" width="100%" height="500">
+        Not collected, please enable in config file.
+    </object>
+</div>
+
+<div id="Shared_preferences" class="tabcontent">
+    <h3>Shared preferences</h3>
+    <object data="shared_prefs.txt" width="100%" height="500">
+        Not collected, please enable in config file.
+    </object>
+</div>
+
+<div id="Database" class="tabcontent">
+    <h3>Database</h3>
+    <object data="database.db" width="100%" height="500">
+        Not collected, please enable in config file.
+    </object>
+</div>
+
+<div id="Bugreport" class="tabcontent">
+    <h3>Bugreport</h3>
+    <object data="bugreport.txt" width="100%" height="500">
+        Not collected, please enable in config file.
+    </object>
+</div>
+
+<div id="Device" class="tabcontent">
+    <h3>Device info:</h3>
+    <object data="device.txt" width="100%" height="500">
+        Device info here, TBC.
+    </object>
+</div>
+
+<script>
+function openCity(evt, testObject) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(testObject).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+document.getElementById("default").click();
+
+var test = document.getElementById("testSummary").innerText;
+if (test.indexOf("[/] OK")>=0) {
+  document.getElementById("testSummary").style.backgroundColor = "#99cc00"; 
+  document.getElementById("tabContent").style.backgroundColor = "#99cc00"; 
+} else {
+  document.getElementById("testSummary").style.backgroundColor = "#ff3300";
+  document.getElementById("tabContent").style.backgroundColor = "#ff3300"; 
+}
+
+</script>
+</body>
+</html> 
