@@ -19,15 +19,9 @@ while getopts d:p:c:a:m: flag ; do
         c) TARGET_CLASS=${OPTARG};;
         a) ANNOTATION=$OPTARG;;
         m) MODE=$OPTARG;;
-        *) echo "Invalid flag passed!";;
+        *) echo "Invalid flag!";;
     esac
 done
-
-# Filters
-# TARGET_PACKAGE=""
-# TARGET_CLASS=""
-# ANNOTATION="SmallTest"
-# ANNOTATION=""
 
 # Preparing envirounment
 mkdir -p $ARTEFACTS_OUTPUT
@@ -36,10 +30,10 @@ mkdir -p $TEST_OUTPUT
 rm -rf $ARTEFACTS_OUTPUT/**
 rm -rf $TEST_OUTPUT/**
 
-# Execution mode
+# Execution mode (sharded=false|concurrent=true)
 CONCURRENT=$MODE
 
-# Cross check selected devices with available ones and creates a list of devices
+# Cross check selected devices with available ones and creates a list of execution devices
 deviceCheck "$SELECTED_DEVICES"
 
 # Prepare devices for tests (closes running apps, installs target apps)
@@ -48,7 +42,7 @@ runScriptOnMultipleThreads "$SELECTED_DEVICES" "./utils/instrumentation_prep.sh"
 # Scans exisitng package for instrumentation tests with application of provided filters
 ./core/scan.sh "$TARGET_PACKAGE" "$TARGET_CLASS" "$ANNOTATION"
 
-# Converts output of the scan into instruction set that can be executed by devices
+# Converts an output of the scan into instruction set that can be executed by devices
 ./core/instruct.sh
 
 # Commands devices to run instructions

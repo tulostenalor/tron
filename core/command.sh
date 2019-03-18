@@ -103,7 +103,7 @@ while true; do
 
             # When an idle process is found:
             # If test run is complete (TEST_RUN_COMPLETE=true), start counting idle threads
-            # If test run is ongoing, break the loop after first idle process if found
+            # If test run is ongoing, break the loop after first idle process is found
             if $TEST_RUN_COMPLETE ; then
                 IDLE_THREAD=$(($IDLE_THREAD+1))
             else
@@ -112,8 +112,8 @@ while true; do
         fi
     done
 
-    # If no free thread found then sleep and try again later
-    # If number of idle threads equal number of all threads, test run is complete
+    # If no idle thread is found then sleep and try again later
+    # If number of idle threads equal number of all threads - test run is complete
     if [ $THREAD -eq -1 ]; then
         sleep 0.1
         continue
@@ -170,6 +170,5 @@ END_TIME=$(date +%s%3N)
 echo "****"
 echo "Total duration: $(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))."
 echo "****"
-
 
 generateHtmlExecutionSummary

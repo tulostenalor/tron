@@ -18,7 +18,6 @@ getTotalExecutionTime() {
 
 ########################################
 # 1. Generates JUnit xml file based on raw test output in concurrent mode
-# 2. Corrects execution time for testsuite / testcases
 ########################################
 generateConcurrentJunitReport() {
     
@@ -32,7 +31,6 @@ generateConcurrentJunitReport() {
 
 ########################################
 # 1. Generates JUnit xml file based on raw test output in sharded mode
-# 2. Corrects execution time for testsuite / testcases
 ########################################
 generateJunitReport() {
 
