@@ -4,14 +4,13 @@
 # 1. Runs a selected script on multiple devices in parallel
 # 2. Awaits taks completion on all devices before allowing further instructions
 ########################################
-runScriptOnMultipleThreads() {
-  SELECTED_DEVICES=$1
-  SCRIPT_PATH=$2
-  OUTPUT_MESSAGE=$3
+runScriptInParallelOnDevices() {
+  SCRIPT_PATH=$1
+  OUTPUT_MESSAGE=$2
 
   PROCESSES=""
   PROCESS_NUMBER=1
-  for DEVICE in $SELECTED_DEVICES ; do
+  for DEVICE in $(cat $DEVICE_LIST_OUTPUT) ; do
     {
       # Runs selected script and passes device S/N as an argument
       sh "$SCRIPT_PATH" "$DEVICE" &
