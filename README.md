@@ -47,6 +47,11 @@ Once basic configuration is complete tests can be executed by simply running: <b
     - note: default mode (false) is sharding
     - example `-m true` (to run tests concurrently) | `-m false` (to shard the tests)
 
+## Example
+An example configuration alongside with test application has been provided in <b>./example</b> folder.
+
+
+
 
 
 
