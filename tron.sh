@@ -37,7 +37,7 @@ CONCURRENT=$MODE
 deviceCheck "$SELECTED_DEVICES"
 
 # Prepare devices for tests (closes running apps, installs target apps)
-runScriptOnMultipleThreads "$SELECTED_DEVICES" "./utils/instrumentation_prep.sh" "Preparation"
+runScriptInParallelOnDevices "./utils/instrumentation_prep.sh" "Preparation"
 
 # Scans exisitng package for instrumentation tests with application of provided filters
 ./core/scan.sh "$TARGET_PACKAGE" "$TARGET_CLASS" "$ANNOTATION"
@@ -49,4 +49,4 @@ runScriptOnMultipleThreads "$SELECTED_DEVICES" "./utils/instrumentation_prep.sh"
 ./core/command.sh $CONCURRENT
 
 # Teardown for devices
-runScriptOnMultipleThreads "$SELECTED_DEVICES" "./utils/instrumentation_post.sh" "Teardown"
+runScriptInParallelOnDevices "./utils/instrumentation_post.sh" "Teardown"
