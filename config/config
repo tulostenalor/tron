@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Global
+PACKAGE="com.test.example"
+DEBUG_PACKAGE="$PACKAGE.debug"
+RUNNER_PACKAGE="$PACKAGE.test"
+INSTRUMENTATION_PACKAGE="$PACKAGE.debug.test"
+ANNOTATION_PACKAGE="androidx.test.filters"
+
+# Package paths
+APP_PATH="./app"
+TEST_PATH="./app"
+
+APP_PREFIX="*-debug.apk"
+TEST_PREFIX="*-debug-androidTest.apk"
+
+# Directories & files
+ARTEFACTS_OUTPUT="./artefacts"
+TEST_OUTPUT="./test-results"
+
+DEVICE_LIST_OUTPUT="$ARTEFACTS_OUTPUT/device-list.txt"
+SCAN_OUTPUT="$ARTEFACTS_OUTPUT/scan-tests.txt"
+INSTRUCTION_OUTPUT="$ARTEFACTS_OUTPUT/instruction-log.txt"
+TIMES_OUTPUT="$TEST_OUTPUT/times.txt"
+
+RAW_SUMMARY_FILE="test-summary.txt"
+XML_SUMMARY_FILE="test-summary.xml"
+
+# Test data
+TEST_RUNNER="androidx.test.runner.AndroidJUnitRunner" # run => 'adb shell pm list instrumentation' in order to find correct name
+TEST_DELIMITER="###"
+DEFAULT_PID=-1
+TIME_NOW="date +%s%3N"
+
+# Execution
+## Prepatation
+CLEAR_DATA_BEFORE_TEST=false
+
+# Report
+## JUnit
+GENERATE_JUNIT_REPORT=true
+
+## Video
+RECORD_VIDEO_FOR_EACH_TEST=true
+COLLECT_VIDEO_ON_FAILURE=true
+COLLECT_VIDEO_ON_SUCCESS=false
+
+TEST_RECORDING_PARAMETERS="--bit-rate 1500000 --size 1280x720"
+TEST_RECORDING_FILE="recording.mp4"
+TEST_SDCARD_RECORDING="/sdcard/$TEST_RECORDING_FILE"
+
+## Logcat
+COLLECT_LOGCAT_ON_FAILURE=true
+COLLECT_LOGCAT_ON_SUCCESS=true
+TEST_LOGCAT_PARAMETERS="'-v time'"
+TEST_LOGCAT_FILE="logcat.txt"
+
+## Database
+COLLECT_DB_ON_FAILURE=false
+COLLECT_DB_ON_SUCCESS=false
+TEST_DB_FILE="app.db"
+TEST_APP_DB_PATH="/data/data/$PACKAGE/databases/$TEST_DB_FILE"
+
+## Preferences
+COLLECT_PREFERENCES_ON_FAILURE=false
+COLLECT_PREFERENCES_ON_SUCCESS=false
+TEST_PREFERENCES_FILE="shared_preferences.xml"
+TEST_APP_SHARED_PREF_PATH="/data/data/$PACKAGE/shared_prefs/$TEST_PREFERENCES_FILE"
+
+## Bugreport
+COLLECT_BUGREPORT_ON_FAILURE=false
+COLLECT_BUGREPORT_ON_SUCCESS=false
+TEST_BUGREPORT_FILE="bugreport.txt"
+
+# Device state
+BRIGHTNESS="155"
+HIDDEN_API_POLICY="1"
+ANIMATIONS_DISABLED="true"
