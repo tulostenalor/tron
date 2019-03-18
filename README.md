@@ -4,7 +4,7 @@ A lightweight engine for running instrumentation tests on multiple Android devic
 ## Features
 - Simple configuration
 - Reactive test sharding execution
-- Filter tests by package, class and/or annotation
+- Package, class, test and/or annotation filters
 - JUnit and HTML report generation
 - Videos, instead of screenshots
 
