@@ -10,18 +10,18 @@ A lightweight engine for running instrumentation tests on multiple Android devic
 
 ## Configuration
  - Suplement a config file (located in <b>./config/config</b>) with application information:
-    - Main and test app package name, test runner name
+    - Main and test app package names, test runner name
     - Update paths and prefixes for both main and test app (used for installation on devices):
         - Default location is: <b> ./app/</b>
         - Default prefix for main app: <b>*-debug.apk</b>
         - Default prefix for test app: <b>*-debug-androidTest.apkk</b>
-    - Decide upon which artefacts to colled on success and/or failures:
+    - Decide upon artefacts to be collected on success and/or failures:
         - Video
         - Logcat
         - Shared preferences
         - Database
         - Bugreport
-    - Configure device state when tests are executed (brightness, animations enabled)
+    - Configure device state when tests are executed (brightness, animation enabled)
     - Enable or disable JUnit report genertion
 
 ## Running
