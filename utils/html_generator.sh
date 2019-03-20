@@ -7,14 +7,17 @@
 ########################################
 
 source ./config/config
+source ./utils/device_manager.sh
 
 generateTestSummary() {
     DEVICE=$1
     INSTRUCTION=$2
     STATUS=$3
 
+    DEVICE_MODEL="$(getDeviceDisplayName $DEVICE)"
+
     MARKER="&&&&&"
-    TEST_DETAILS="<div id=\"testSummary\"><h1 id=\"deviceName\">Device: $DEVICE</h1><h3 id=\"testStatus\">Test: $INSTRUCTION - $STATUS</h3></div>"
+    TEST_DETAILS="<div id=\"testSummary\"><h1 id=\"deviceName\">Device: $DEVICE_MODEL</h1><h3 id=\"testStatus\">Test: $INSTRUCTION - $STATUS</h3></div>"
 
     cp ./html/test_template.html "$TEST_DIRECTORY/index.html"
     sed -i -e "s~$MARKER~$TEST_DETAILS~" "$TEST_DIRECTORY/index.html"
@@ -53,8 +56,10 @@ generateHtmlExecutionSummary() {
           FIRST_DEVICE=false
         fi
 
+        DEVICE_MODEL="$(getDeviceDisplayName $DEVICE)"
+
         echo "<table id="deviceTable" border="0" width="1200" align="center">" >> "$EXECUTION_SUMMARY"
-        echo "<tr><td align="left" bgcolor="$COLOR">Device: $DEVICE</td></tr>" >> "$EXECUTION_SUMMARY"
+        echo "<tr><td align="left" bgcolor="$COLOR">Device: $DEVICE_MODEL</td></tr>" >> "$EXECUTION_SUMMARY"
 
         CURRENT_CLASS_NAME=""
         for TEST in $(echo "$TEST_LIST") ; do

@@ -22,6 +22,9 @@ if [ ${#DEVICES[@]} -eq 0 ]; then
     exit 1
 fi
 
+# Load test exclusions
+EXCLUSIONS=$(cat ./config/exclusions)
+
 # Number of parallel threads is equal to number of devices
 THREADS=${#DEVICES[@]}
 
@@ -51,7 +54,7 @@ createTestInstructionSet() {
 
     i=0
     ADD_INSTRUCTIONS=false
-    for LINE in `cat "$INSTRUCTION_OUTPUT"` ; do
+    for LINE in $(cat "$INSTRUCTION_OUTPUT") ; do
 
         # When delimiter is found
         if [ $LINE == "$TEST_DELIMITER" ] ; then
@@ -90,16 +93,27 @@ fi
 ########################################
 # Test execution starts here
 ########################################
+INCOMPATIBLE_THREADS=()
 EXECUTION_PROGRESS=0
 TEST_RUN_COMPLETE=false
-while true; do
+while true ; do
     # Find first idle process in thread pool (initially all are)
     THREAD=-1
     IDLE_THREAD=0
     for PROCESS in "${!THREAD_POOL[@]}" ; do
         PID=${THREAD_POOL[$PROCESS]}
         if ! isProcessRunning $PID ; then
-            THREAD=$PROCESS
+
+            if [[ "${INCOMPATIBLE_THREADS[@]}" =~ "${PROCESS}" ]]; then
+                if [ ${#INCOMPATIBLE_THREADS[@]} -eq $THREADS ] ; then
+                    echo "===== There are no devices compatible with this instruction set! ====="
+                    exit 1
+                else
+                    continue
+                fi
+            else
+                THREAD=$PROCESS
+            fi
 
             # When an idle process is found:
             # If test run is complete (TEST_RUN_COMPLETE=true), start counting idle threads
@@ -136,7 +150,14 @@ while true; do
         INSTRUCTIONS="$ARTEFACTS_OUTPUT/instruction-log.txt"
     else 
         INSTRUCTIONS="$ARTEFACTS_OUTPUT/instruction-set-$SELECTED_DEVICE.txt"
-        createTestInstructionSet $EXECUTION_PROGRESS $SELECTED_DEVICE $PLAN_OUTPUT $ARTEFACTS_OUTPUT
+        createTestInstructionSet $EXECUTION_PROGRESS $SELECTED_DEVICE
+
+        if ! deviceCompatible "$INSTRUCTIONS" "$SELECTED_DEVICE" "$EXCLUSIONS" ; then
+            INCOMPATIBLE_THREADS+=($THREAD)
+            continue
+        else
+            INCOMPATIBLE_THREADS=()
+        fi
     fi
     
     # Run test instruction set on a selected device

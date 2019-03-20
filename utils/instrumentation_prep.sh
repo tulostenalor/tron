@@ -3,6 +3,7 @@
 # Sourcing parameters
 source ./config/config
 source ./utils/app_manager.sh
+source ./utils/device_manager.sh
 
 # Passed parameters
 DEVICE=$1
@@ -40,6 +41,9 @@ adb -s $DEVICE shell rm -r -f ./sdcard/Pictures/Screenshots/**
 
 # Killing all running apps (including systemUI, thus purging all popups)
 killAllRunningApps $DEVICE
+
+# Gather basic details about a device
+generateDeviceProperties $DEVICE
 
 # Installing main & test apps
 adb -s $DEVICE install $APP_PATH/$APP_PREFIX

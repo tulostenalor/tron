@@ -94,9 +94,6 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     adb -s $DEVICE shell am instrument -w -r -e class $INSTRUCTION $RUNNER_PACKAGE/$TEST_RUNNER > $RUNNING_TEST
     END_TIME=$(date +%s%3N)
 
-    # Remove empty lines from test summary
-    sed -i '/^$/d' $RUNNING_TEST
-
     # Capture duration test execution summary
     DURATION=$(convertMilisecondsToSeconds $((END_TIME-START_TIME)))
 
@@ -145,7 +142,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         fi
 
         # Pull recording on failure
-        if [[ $RECORD_VIDEO_FOR_EACH_TEST && $COLLECT_VIDEO_ON_FAILURE ]] ; then
+        if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_FAILURE)) ; then
             # PROCESS_START=$(date +%s%3N)
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
@@ -166,7 +163,6 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         # Collect logs on success
         if $COLLECT_LOGCAT_ON_SUCCESS ; then
             adb -s $DEVICE logcat -d "$TEST_LOGCAT_PARAMETERS" > $LOGCAT_FILE
-            sed -i '/^$/d' $LOGCAT_FILE
         fi
 
         # Collect DB content on success
@@ -185,8 +181,9 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         fi
 
         # Pull recording on success
-        if [[ $RECORD_VIDEO_FOR_EACH_TEST && $COLLECT_VIDEO_ON_SUCCESS ]] ; then
+        if  (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_SUCCESS)) ; then
             # PROCESS_START=$(date +%s%3N)
+            echo "Pulling video on success. Succes: $COLLECT_VIDEO_ON_SUCCESS"
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
             } &> /dev/null
