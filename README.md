@@ -53,12 +53,12 @@ It is possible to enforce a requirement for running specific test, class or pack
 
 - `CONDITION_SELECTOR|CONDITION_SDK|CONDITION_OPERATOR`
 
-- <b>CONDITION_SELECTOR</b> => a test string filter
+- CONDITION_SELECTOR => a test string filter
     - definition: a string compared with running tests, if match is found condition check for device will occur
     - note: selector can be a specific test (com.test.example.instrumentation.Class#Test1), class (com.test.example.instrumentation.Class) or package (com.test.example.instrumentation)
-- <b>CONDITION_SDK</b> => a SDK version integer
+- CONDITION_SDK => a SDK version integer
     - definition: used as one of the arguments to determine if device is meeting criteria for running the test
-- <b>CONDITION_OPERATOR</b> => comparison operator
+- CONDITION_OPERATOR => comparison operator
     - definition: an operator used for comparing the arguments (CONDITION_SDK & DEVICE_SDK)
     - note: standard operators can be used, e.g `-gt`, `lt`, `eq`, etc.
 
