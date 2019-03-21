@@ -49,19 +49,20 @@ Once basic configuration is complete tests can be executed by simply running: <b
     - example `-m true` (to run tests concurrently) | `-m false` (to shard the tests)
 
 ## Test conditions
-It is possible to enforce a requirement for running specific test, class or package on a desired device SDK version. This is useful when testing for example permissions or other OS based features. Configuration is done by creating <b>config/conditions</b> file and adding specifications in a following format:
-`CONDITION_SELECTOR|CONDITION_SDK|CONDITION_OPERATOR`
+It is possible to enforce a requirement for running specific test, class or package on a desired device SDK version. This is useful when testing for example permissions or other OS based features. Configuration is done by creating `config/conditions` (default path) file and adding specifications (each in new line) in a following format:
 
-- <b>CONDITION_SELECTOR</b> => a string filter
-    - definition: a string compared with running tests, if match is found condition check will occur
-    - note: it can pont to a specific test (com.test.example.instrumentation.Class#Test1), class (com.test.example.instrumentation.Class) or package (com.test.example.instrumentation)
+- `CONDITION_SELECTOR|CONDITION_SDK|CONDITION_OPERATOR`
+
+- <b>CONDITION_SELECTOR</b> => a test string filter
+    - definition: a string compared with running tests, if match is found condition check for device will occur
+    - note: selector can be a specific test (com.test.example.instrumentation.Class#Test1), class (com.test.example.instrumentation.Class) or package (com.test.example.instrumentation)
 - <b>CONDITION_SDK</b> => a SDK version integer
     - definition: used as one of the arguments to determine if device is meeting criteria for running the test
 - <b>CONDITION_OPERATOR</b> => comparison operator
     - definition: an operator used for comparing the arguments (CONDITION_SDK & DEVICE_SDK)
     - note: standard operators can be used, e.g `-gt`, `lt`, `eq`, etc.
 
-For example, following condition: `com.test.example.instrumentation.Class|23|-gt` - will enforce that all tests under `Class` be run only on devices with SDK versoin `greater than` `23`.
+For example, following condition: `com.test.example.instrumentation.Class|23|-gt` - will enforce that all tests under `Class` be run only on devices with SDK versoin `greater than 23`.
 
 ## Example
 An example configuration alongside with test application has been provided in <b>example</b> folder.
