@@ -19,6 +19,10 @@ deviceCheck() {
   fi
 }
 
+########################################
+# 1. Generates a list of device properties
+# 2. Stories properties in specified location for each device
+########################################
 generateDeviceProperties() {
   DEVICE=$1
   PROPERTIES_OUTPUT="$TEST_OUTPUT/$DEVICE/device-properties.txt"
@@ -30,12 +34,20 @@ generateDeviceProperties() {
   echo "buildVersion:$(adb -s $DEVICE shell getprop ro.build.version.release)" >> "$PROPERTIES_OUTPUT"
 }
 
+########################################
+# 1. Returns a display nmae for a device
+# 2. Requires device SN to be provided
+########################################
 getDeviceDisplayName() {
   DEVICE=$1
 
   echo "$(getProperty $DEVICE productManufactuer) - $(getProperty $DEVICE productModel) ($(getProperty $DEVICE buildVersion))"
 }
 
+########################################
+# 1. Returns a value of devices property
+# 2. Requires device SN and property name to be provided
+########################################
 getProperty() {
   DEVICE=$1
   PROPERTY=$2
@@ -43,24 +55,58 @@ getProperty() {
   echo "$(cat $TEST_OUTPUT/$DEVICE/device-properties.txt | grep $PROPERTY | cut -d ":" -f2)"
 }
 
-deviceCompatible() {
+########################################
+# 1. Checks if device is meeting conditions for running the instruction set
+# 2. Compares device SDK with the one specified in test conditions configuration
+# 3. It uses a comparision operator also provided from the same config
+########################################
+deviceCompatibleWithInstructionSet() {
   INSTRUCTIONS=$1
   DEVICE=$2
-  EXCLUSIONS=$3
+  TEST_CONDITIONS=$3
 
   DEVICE_SDK=$(getProperty $DEVICE buildSdk)
 
-  for EXCLUSION in $(echo "$EXCLUSIONS") ; do
-    EXCLUSION_SELECTOR=$(echo "$EXCLUSION" | cut -d "|" -f1)
-    EXCLUSION_SDK=$(echo "$EXCLUSION" | cut -d "|" -f2)
-    EXCLUSION_CONDITION=$(echo "$EXCLUSION" | cut -d "|" -f3)
+  for CONDITION in $(echo "$TEST_CONDITIONS") ; do
+    CONDITION_SELECTOR=$(echo "$CONDITION" | cut -d "|" -f1)
+    CONDITION_SDK=$(echo "$CONDITION" | cut -d "|" -f2)
+    CONDITION_OPERATOR=$(echo "$CONDITION" | cut -d "|" -f3)
 
-    if grep -q "$EXCLUSION_SELECTOR" "$INSTRUCTIONS" ; then
-      if [ ! "$DEVICE_SDK" $EXCLUSION_CONDITION "$EXCLUSION_SDK" ] ; then
-        return 1
+    if grep -q "$CONDITION_SELECTOR" "$INSTRUCTIONS" ; then
+      if [ ! "$DEVICE_SDK" $CONDITION_OPERATOR "$CONDITION_SDK" ] ; then
+        return 1 # false
       fi
     fi
   done
 
-  return 0
+  return 0 # true
+}
+
+########################################
+# 1. Checks if device is meeting conditions for running a particular instruction
+# 2. Compares device SDK with the one specified in test conditions configuration
+# 3. It uses a comparision operator also provided from the same config
+########################################
+deviceCompatibleWithAnInstruction() {
+  INSTRUCTION=$1
+  DEVICE=$2
+  TEST_CONDITIONS=$3
+
+  DEVICE_SDK=$(getProperty $DEVICE buildSdk)
+
+  for CONDITION in $(echo "$TEST_CONDITIONS") ; do
+    CONDITION_SELECTOR=$(echo "$CONDITION" | cut -d "|" -f1)
+    CONDITION_SDK=$(echo "$CONDITION" | cut -d "|" -f2)
+    CONDITION_OPERATOR=$(echo "$CONDITION" | cut -d "|" -f3)
+
+    CONDITION_CHECK=$(echo "$INSTRUCTION" | grep "$CONDITION_SELECTOR" | wc -l | tr -d '\n\t\r ')
+
+    if [ $CONDITION_CHECK -gt 0 ] ; then
+      if [ ! "$DEVICE_SDK" $CONDITION_OPERATOR "$CONDITION_SDK" ] ; then
+        return 1 # false
+      fi
+    fi
+  done
+
+  return 0 # true
 }

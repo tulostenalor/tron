@@ -64,19 +64,19 @@ body {font-family: "Lato", sans-serif;}
 &&&&&
 
 <div id="tabContent" class="tab">
-  <button class="tablinks" onclick="openCity(event, 'Instrumentation')" id="default">Instrumentation</button>
-  <button class="tablinks" onclick="openCity(event, 'Logcat')">Logcat</button>
-  <button class="tablinks" onclick="openCity(event, 'Video')">Video</button>
-  <!-- <button class="tablinks" onclick="openCity(event, 'Shared_preferences')">Shared preferences</button> -->
-  <!-- <button class="tablinks" onclick="openCity(event, 'Database')">Database</button> -->
-  <!-- <button class="tablinks" onclick="openCity(event, 'Bugreport')">Bugreport</button> -->
-  <button class="tablinks" onclick="openCity(event, 'Device')">Device</button>
+  <button class="tablinks" onclick="openTab(event, 'Instrumentation')" id="default">Instrumentation</button>
+  <button class="tablinks" onclick="openTab(event, 'Video')">Video</button>
+  <button class="tablinks" onclick="openTab(event, 'Logcat')">Logcat</button>
+  <!-- <button class="tablinks" onclick="openTab(event, 'Shared_preferences')">Shared preferences</button> -->
+  <!-- <button class="tablinks" onclick="openTab(event, 'Database')">Database</button> -->
+  <!-- <button class="tablinks" onclick="openTab(event, 'Bugreport')">Bugreport</button> -->
+  <button class="tablinks" onclick="openTab(event, 'Device')">Device</button>
 </div>
 
 <div id="Instrumentation" class="tabcontent">
   <h3>Instrumentation</h3>
   <object data="running-test.txt" width="100%" height="500">
-      Not avaiable, this indicates an execution error.
+      Not avaiable, either test have been skipped or an execution error occured.
   </object>
 </div>
 
@@ -123,7 +123,7 @@ body {font-family: "Lato", sans-serif;}
 </div>
 
 <script>
-function openCity(evt, testObject) {
+function openTab(evt, testObject) {
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tabcontent");
   for (i = 0; i < tabcontent.length; i++) {
@@ -143,6 +143,9 @@ var test = document.getElementById("testSummary").innerText;
 if (test.indexOf("[/] OK")>=0) {
   document.getElementById("testSummary").style.backgroundColor = "#99cc00"; 
   document.getElementById("tabContent").style.backgroundColor = "#99cc00"; 
+} else if (test.indexOf("[-] SKIPPED")>=0) {
+  document.getElementById("testSummary").style.backgroundColor = "#999999"; 
+  document.getElementById("tabContent").style.backgroundColor = "#999999"; 
 } else {
   document.getElementById("testSummary").style.backgroundColor = "#ff3300";
   document.getElementById("tabContent").style.backgroundColor = "#ff3300"; 

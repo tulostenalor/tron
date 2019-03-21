@@ -22,8 +22,10 @@ if [ ${#DEVICES[@]} -eq 0 ]; then
     exit 1
 fi
 
-# Load test exclusions
-EXCLUSIONS=$(cat ./config/exclusions)
+# Loading test conditions, if meeting critera
+if ((! $CONCURRENT) && ($TEST_CONDITIONS_ENABLED)) ; then
+    TEST_CONDITIONS=$(cat $TEST_CONDITION_INPUT)
+fi
 
 # Number of parallel threads is equal to number of devices
 THREADS=${#DEVICES[@]}
@@ -93,7 +95,7 @@ fi
 ########################################
 # Test execution starts here
 ########################################
-INCOMPATIBLE_THREADS=()
+ZOMBIE_THREADS=()
 EXECUTION_PROGRESS=0
 TEST_RUN_COMPLETE=false
 while true ; do
@@ -104,8 +106,12 @@ while true ; do
         PID=${THREAD_POOL[$PROCESS]}
         if ! isProcessRunning $PID ; then
 
-            if [[ "${INCOMPATIBLE_THREADS[@]}" =~ "${PROCESS}" ]]; then
-                if [ ${#INCOMPATIBLE_THREADS[@]} -eq $THREADS ] ; then
+            # When an idle process is found:
+            # If TEST_CONDITIONS_ENABLED flag is set to true, check if selected thread (tied to a device) is capable or running the instruction
+            # In specific case if none of the threads (devices) meets the conditions of the instruction, execution is stopped
+            # If TEST_CONDITIONS_ENABLED flag is set to false, then first free thread is selected to run the instruction
+            if [[ "${ZOMBIE_THREADS[@]}" =~ "${PROCESS}" ]] && [[ $TEST_CONDITIONS_ENABLED ]] ; then
+                if [ ${#ZOMBIE_THREADS[@]} -eq $THREADS ] ; then
                     echo "===== There are no devices compatible with this instruction set! ====="
                     exit 1
                 else
@@ -152,11 +158,16 @@ while true ; do
         INSTRUCTIONS="$ARTEFACTS_OUTPUT/instruction-set-$SELECTED_DEVICE.txt"
         createTestInstructionSet $EXECUTION_PROGRESS $SELECTED_DEVICE
 
-        if ! deviceCompatible "$INSTRUCTIONS" "$SELECTED_DEVICE" "$EXCLUSIONS" ; then
-            INCOMPATIBLE_THREADS+=($THREAD)
-            continue
-        else
-            INCOMPATIBLE_THREADS=()
+        # If TEST_CONDITIONS_ENABLED flag is set to true, checks if device is capable of running the instruction set
+        # If device cannot run it, its added to ZOMBIE_THREADS pool and new (next available) device will be selected
+        # If device is capable of running the instruction set, then ZOMBIE_THREAD pool is being cleared
+        if $TEST_CONDITIONS_ENABLED ; then
+            if ! deviceCompatibleWithInstructionSet "$INSTRUCTIONS" "$SELECTED_DEVICE" "$TEST_CONDITIONS" ; then
+                ZOMBIE_THREADS+=($THREAD)
+                continue
+            else
+                ZOMBIE_THREADS=()
+            fi
         fi
     fi
     
@@ -166,7 +177,7 @@ while true ; do
 
     # Output message
     PROGRESS=$(calculatePercentage "$(($EXECUTION_PROGRESS+1))" "$NUMBER_OF_TESTS")
-    echo "Instruction set started: $(($EXECUTION_PROGRESS+1)) of $NUMBER_OF_TESTS [$PROGRESS %]"
+    echo "Instruction set started: $(($EXECUTION_PROGRESS+1)) of $NUMBER_OF_TESTS [$PROGRESS%]"
     
     # Assigning a new PID to a thread in a pool
     THREAD_POOL[$THREAD]=$PID
@@ -192,4 +203,6 @@ echo "****"
 echo "Total duration: $(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))."
 echo "****"
 
-generateHtmlExecutionSummary
+if $GENERATE_HTML_REPORT ; then
+    generateHtmlExecutionSummary
+fi
