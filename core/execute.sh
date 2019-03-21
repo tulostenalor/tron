@@ -24,6 +24,11 @@ fi
 EXECUTION_PROGRESS=0
 NUMBER_OF_INSTRUCTIONS=$(cat "$INSTRUCTION_SET" | grep -v "$TEST_DELIMITER" | wc -l | tr -d '\n\t\r ')
 
+# Loading test conditions, if meeting critera
+if (($CONCURRENT) && ($TEST_CONDITIONS_ENABLED)) ; then
+    TEST_CONDITIONS=$(cat $TEST_CONDITION_INPUT)
+fi
+
 # Run instructions line by line from instruction set
 for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     # Do nothing if instruction is a test delimiter
@@ -83,8 +88,21 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
     # Output message based on execution mode
     if $CONCURRENT ; then
+        # If TEST_CONDITIONS_ENABLED flag is set to true, checks if device is capable of running the instruction
+        # If device cannot run it, instruction is marked as skipped in report and device moves on to the next one
+        if $TEST_CONDITIONS_ENABLED ; then
+            if ! deviceCompatibleWithAnInstruction "$INSTRUCTION" "$DEVICE" "$TEST_CONDITIONS" ; then
+                echo "RUN ($INSTRUCTION) device ($DEVICE), duration: 0.0 seconds, status: [-] SKIPPED" >> "$TIMES_OUTPUT"
+
+                if $GENERATE_HTML_REPORT ; then
+                    generateTestSummary $DEVICE $INSTRUCTION "[-] SKIPPED."
+                fi
+                continue
+            fi
+        fi
+
         echo "Instruction details => Class: $INSTRUCTION_CLASS | Method: $INSTRUCTION_METHOD"
-        echo "Instruction running => Device: $DEVICE | $(($EXECUTION_PROGRESS+1)) of $NUMBER_OF_INSTRUCTIONS [$PROGRESS %]"
+        echo "Instruction running => Device: $DEVICE | $(($EXECUTION_PROGRESS+1)) of $NUMBER_OF_INSTRUCTIONS [$PROGRESS%]"
     else
         echo "Instruction details => Class: $INSTRUCTION_CLASS | Method: $INSTRUCTION_METHOD"
     fi
@@ -93,9 +111,6 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     START_TIME=$(date +%s%3N)
     adb -s $DEVICE shell am instrument -w -r -e class $INSTRUCTION $RUNNER_PACKAGE/$TEST_RUNNER > $RUNNING_TEST
     END_TIME=$(date +%s%3N)
-
-    # Remove empty lines from test summary
-    sed -i '/^$/d' $RUNNING_TEST
 
     # Capture duration test execution summary
     DURATION=$(convertMilisecondsToSeconds $((END_TIME-START_TIME)))
@@ -145,7 +160,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         fi
 
         # Pull recording on failure
-        if [[ $RECORD_VIDEO_FOR_EACH_TEST && $COLLECT_VIDEO_ON_FAILURE ]] ; then
+        if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_FAILURE)) ; then
             # PROCESS_START=$(date +%s%3N)
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
@@ -161,12 +176,15 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
         # Log test execution
         echo "RUN ($INSTRUCTION) device ($DEVICE), duration: $DURATION seconds, status: [x] FAIL" >> "$TIMES_OUTPUT"
-        generateTestSummary $DEVICE $INSTRUCTION "[x] FAIL."
+
+        # Generate html summary report for test if enabled
+        if $GENERATE_HTML_REPORT ; then
+            generateTestSummary $DEVICE $INSTRUCTION "[x] FAIL."
+        fi
     else
         # Collect logs on success
         if $COLLECT_LOGCAT_ON_SUCCESS ; then
             adb -s $DEVICE logcat -d "$TEST_LOGCAT_PARAMETERS" > $LOGCAT_FILE
-            sed -i '/^$/d' $LOGCAT_FILE
         fi
 
         # Collect DB content on success
@@ -185,8 +203,9 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         fi
 
         # Pull recording on success
-        if [[ $RECORD_VIDEO_FOR_EACH_TEST && $COLLECT_VIDEO_ON_SUCCESS ]] ; then
+        if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_SUCCESS)) ; then
             # PROCESS_START=$(date +%s%3N)
+            echo "Pulling video on success. Succes: $COLLECT_VIDEO_ON_SUCCESS"
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
             } &> /dev/null
@@ -199,7 +218,11 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
         # Log test execution
         echo "RUN ($INSTRUCTION) device ($DEVICE), duration: $DURATION seconds, status: [/] OK" >> "$TIMES_OUTPUT"
-        generateTestSummary $DEVICE $INSTRUCTION "[/] OK."
+
+        # Generate html summary report for test if enabled
+        if $GENERATE_HTML_REPORT ; then
+            generateTestSummary $DEVICE $INSTRUCTION "[/] OK."
+        fi
     fi
 
     # Delete recording from the device

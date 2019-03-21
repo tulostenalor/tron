@@ -7,14 +7,17 @@
 ########################################
 
 source ./config/config
+source ./utils/device_manager.sh
 
 generateTestSummary() {
     DEVICE=$1
     INSTRUCTION=$2
     STATUS=$3
 
+    DEVICE_MODEL="$(getDeviceDisplayName $DEVICE)"
+
     MARKER="&&&&&"
-    TEST_DETAILS="<div id=\"testSummary\"><h1 id=\"deviceName\">Device: $DEVICE</h1><h3 id=\"testStatus\">Test: $INSTRUCTION - $STATUS</h3></div>"
+    TEST_DETAILS="<div id=\"testSummary\"><h1 id=\"deviceName\">Device: $DEVICE_MODEL</h1><h3 id=\"testStatus\">Test: $INSTRUCTION - $STATUS</h3></div>"
 
     cp ./html/test_template.html "$TEST_DIRECTORY/index.html"
     sed -i -e "s~$MARKER~$TEST_DETAILS~" "$TEST_DIRECTORY/index.html"
@@ -30,10 +33,11 @@ generateHtmlExecutionSummary() {
     NUMBER_OF_TOTAL_TESTS=$(cat $TIMES_OUTPUT | wc -l | tr -d "\n\t\r ")
     NUMBER_OF_PASSING_TESTS=$(cat $TIMES_OUTPUT | grep "OK" | wc -l | tr -d "\n\t\r ")
     NUMBER_OF_FAILING_TESTS=$(cat $TIMES_OUTPUT | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+    NUMBER_OF_SKIPPED_TESTS=$(cat $TIMES_OUTPUT | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
 
     echo "<div id="testSummary"> 
             <h1>Execution summary</h1>
-            <h3>$NUMBER_OF_DEVICES device(s) run $NUMBER_OF_TOTAL_TESTS tests in total, $NUMBER_OF_PASSING_TESTS have passed and $NUMBER_OF_FAILING_TESTS have failed.</h3>
+            <h3>$NUMBER_OF_DEVICES device(s) run $NUMBER_OF_TOTAL_TESTS tests, $NUMBER_OF_PASSING_TESTS have passed, $NUMBER_OF_FAILING_TESTS have failed and $NUMBER_OF_SKIPPED_TESTS been skipped.</h3>
          </div>" >> "$EXECUTION_SUMMARY"
 
     FIRST_DEVICE=true
@@ -53,8 +57,10 @@ generateHtmlExecutionSummary() {
           FIRST_DEVICE=false
         fi
 
+        DEVICE_MODEL="$(getDeviceDisplayName $DEVICE)"
+
         echo "<table id="deviceTable" border="0" width="1200" align="center">" >> "$EXECUTION_SUMMARY"
-        echo "<tr><td align="left" bgcolor="$COLOR">Device: $DEVICE</td></tr>" >> "$EXECUTION_SUMMARY"
+        echo "<tr><td align="left" bgcolor="$COLOR">Device: $DEVICE_MODEL</td></tr>" >> "$EXECUTION_SUMMARY"
 
         CURRENT_CLASS_NAME=""
         for TEST in $(echo "$TEST_LIST") ; do
@@ -82,12 +88,15 @@ generateHtmlExecutionSummary() {
 
             TEST_HASH=$(getHash $TEST)
             TEST_RELATIVE_PATH=$(echo "./$DEVICE/$TEST_HASH/index.html" | sed s/"#"/"%23"/g)
-            TEST_STATUS=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+            TEST_FAIL=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+            TEST_SKIP=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
 
-            if [ $TEST_STATUS -eq 0 ] ; then
-                COLOR="#99cc00"
-            else
+            if [ $TEST_FAIL -gt 0 ] ; then
                 COLOR="#ff3300"
+            elif [ $TEST_SKIP -gt 0 ] ; then
+                COLOR="#999999"
+            else
+                COLOR="#99cc00"
             fi
 
             echo "<tr><td align="left" bgcolor="$COLOR" id="testRow"><a href="$TEST_RELATIVE_PATH">--> $TEST_NAME</a></td></tr>" >> "$EXECUTION_SUMMARY"
