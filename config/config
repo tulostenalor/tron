@@ -3,13 +3,12 @@
 # Global
 PACKAGE="com.test.example"
 DEBUG_PACKAGE="$PACKAGE.debug"
-RUNNER_PACKAGE="$PACKAGE.test"
 INSTRUMENTATION_PACKAGE="$PACKAGE.debug.test"
 ANNOTATION_PACKAGE="androidx.test.filters"
-TEST_RUNNER="androidx.test.runner.AndroidJUnitRunner" # run => 'adb shell pm list instrumentation' in order to find correct name
 
 # Features
 TEST_CONDITIONS_ENABLED=true
+TEST_SETUP_ENABLED=true
 
 # Package paths
 APP_PATH="./app"
