@@ -24,6 +24,7 @@ generateTestSummary() {
 }
 
 generateHtmlExecutionSummary() {
+    TOTAL_DURATION=$1
     DEVICE_LIST=$(cat $DEVICE_LIST_OUTPUT)
     EXECUTION_SUMMARY="$TEST_OUTPUT/index.html"
 
@@ -37,7 +38,7 @@ generateHtmlExecutionSummary() {
 
     echo "<div id="testSummary"> 
             <h1>Execution summary</h1>
-            <h3>$NUMBER_OF_DEVICES device(s) run $NUMBER_OF_TOTAL_TESTS tests, $NUMBER_OF_PASSING_TESTS have passed, $NUMBER_OF_FAILING_TESTS have failed and $NUMBER_OF_SKIPPED_TESTS been skipped.</h3>
+            <h3>$NUMBER_OF_DEVICES device(s) run $NUMBER_OF_TOTAL_TESTS tests, $NUMBER_OF_PASSING_TESTS have passed, $NUMBER_OF_FAILING_TESTS have failed and $NUMBER_OF_SKIPPED_TESTS been skipped in $TOTAL_DURATION</h3>
          </div>" >> "$EXECUTION_SUMMARY"
 
     FIRST_DEVICE=true

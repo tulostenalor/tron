@@ -16,6 +16,10 @@ ANNOTATION=$3
 # Assigning first available device
 DEVICE=$(cat $DEVICE_LIST_OUTPUT | tail -1)
 
+# Obtain test instrumentation runner for test package
+adb -s $DEVICE shell pm list instrumentation | grep "$PACKAGE" | cut -d ":" -f2 | cut -d " " -f1 | tr -d "\n\t\r " > $TEST_RUNNER_OUTPUT
+TEST_RUNNER=$(cat $TEST_RUNNER_OUTPUT)
+
 # Ensuring scan output is being removed
 if [ -e $SCAN_OUTPUT ]; then
     rm $SCAN_OUTPUT
@@ -52,10 +56,10 @@ if [ -n "$TARGET_CLASS" ] ; then
         fi
     done
 
-    adb -s $DEVICE shell am instrument -w -r -e log true -e class $CLASSES $ANNOTATION $RUNNER_PACKAGE/$TEST_RUNNER >> $SCAN_OUTPUT
+    adb -s $DEVICE shell am instrument -w -r -e log true -e class $CLASSES $ANNOTATION $TEST_RUNNER >> $SCAN_OUTPUT
 fi
 
 # Filtering by package and annotation only occurs when package filter have been supplied or there is no class filter
 if [ -n "$PACKAGES" ] ; then
-    adb -s $DEVICE shell am instrument -w -r -e log true -e package $PACKAGES $ANNOTATION $RUNNER_PACKAGE/$TEST_RUNNER >> $SCAN_OUTPUT
+    adb -s $DEVICE shell am instrument -w -r -e log true -e package $PACKAGES $ANNOTATION $TEST_RUNNER >> $SCAN_OUTPUT
 fi

@@ -22,11 +22,6 @@ if [ ${#DEVICES[@]} -eq 0 ]; then
     exit 1
 fi
 
-# Loading test conditions, if meeting critera
-if ((! $CONCURRENT) && ($TEST_CONDITIONS_ENABLED)) ; then
-    TEST_CONDITIONS=$(cat $TEST_CONDITION_INPUT)
-fi
-
 # Number of parallel threads is equal to number of devices
 THREADS=${#DEVICES[@]}
 
@@ -197,12 +192,13 @@ fi
 
 # Capture end time
 END_TIME=$(date +%s%3N)
+TOTAL_DURATION=$(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))
 
 # Duration summary
 echo "****"
-echo "Total duration: $(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))."
+echo "Total duration: $TOTAL_DURATION."
 echo "****"
 
 if $GENERATE_HTML_REPORT ; then
-    generateHtmlExecutionSummary
+    generateHtmlExecutionSummary "$TOTAL_DURATION"
 fi

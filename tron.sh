@@ -45,6 +45,10 @@ runScriptInParallelOnDevices "./utils/instrumentation_prep.sh" "Preparation"
 # Converts an output of the scan into instruction set that can be executed by devices
 ./core/instruct.sh
 
+# Export global variables for downstream scripts to share
+export TEST_CONDITIONS=$(cat "$TEST_CONDITION_INPUT")
+export TEST_RUNNER=$(cat "$TEST_RUNNER_OUTPUT")
+
 # Commands devices to run instructions
 ./core/command.sh $CONCURRENT
 

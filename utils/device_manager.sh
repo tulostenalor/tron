@@ -67,7 +67,7 @@ deviceCompatibleWithInstructionSet() {
 
   DEVICE_SDK=$(getProperty $DEVICE buildSdk)
 
-  for CONDITION in $(echo "$TEST_CONDITIONS") ; do
+  for CONDITION in $(echo "$TEST_CONDITIONS" | grep "test_condition") ; do
     CONDITION_SELECTOR=$(echo "$CONDITION" | cut -d "|" -f1)
     CONDITION_SDK=$(echo "$CONDITION" | cut -d "|" -f2)
     CONDITION_OPERATOR=$(echo "$CONDITION" | cut -d "|" -f3)
@@ -94,7 +94,7 @@ deviceCompatibleWithAnInstruction() {
 
   DEVICE_SDK=$(getProperty $DEVICE buildSdk)
 
-  for CONDITION in $(echo "$TEST_CONDITIONS") ; do
+  for CONDITION in $(echo "$TEST_CONDITIONS" | grep "test_condition") ; do
     CONDITION_SELECTOR=$(echo "$CONDITION" | cut -d "|" -f1)
     CONDITION_SDK=$(echo "$CONDITION" | cut -d "|" -f2)
     CONDITION_OPERATOR=$(echo "$CONDITION" | cut -d "|" -f3)

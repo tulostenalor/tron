@@ -4,6 +4,7 @@
 source ./config/config
 source ./utils/converter.sh
 source ./utils/html_generator.sh
+source ./utils/test_manager.sh
 
 INSTRUCTION_SET=$1
 DEVICE=$2
@@ -24,16 +25,16 @@ fi
 EXECUTION_PROGRESS=0
 NUMBER_OF_INSTRUCTIONS=$(cat "$INSTRUCTION_SET" | grep -v "$TEST_DELIMITER" | wc -l | tr -d '\n\t\r ')
 
-# Loading test conditions, if meeting critera
-if (($CONCURRENT) && ($TEST_CONDITIONS_ENABLED)) ; then
-    TEST_CONDITIONS=$(cat $TEST_CONDITION_INPUT)
-fi
-
 # Run instructions line by line from instruction set
 for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     # Do nothing if instruction is a test delimiter
     if [ $INSTRUCTION == "$TEST_DELIMITER" ]; then
         continue
+    fi
+
+    # Run test setup tasks, if required by configuration
+    if $TEST_SETUP_ENABLED ; then
+        runSetupCommandIfRequired "$INSTRUCTION" "$DEVICE" "$TEST_CONDITIONS"
     fi
 
     if $CLEAR_DATA_BEFORE_TEST ; then
@@ -109,7 +110,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
     # Execute instruction
     START_TIME=$(date +%s%3N)
-    adb -s $DEVICE shell am instrument -w -r -e class $INSTRUCTION $RUNNER_PACKAGE/$TEST_RUNNER > $RUNNING_TEST
+    adb -s $DEVICE shell am instrument -w -r -e class $INSTRUCTION $TEST_RUNNER > $RUNNING_TEST
     END_TIME=$(date +%s%3N)
 
     # Capture duration test execution summary
@@ -171,7 +172,6 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
         # Failure
         echo "[x] FAIL ($DURATION s)"
-        echo "$RUNNING_TEST"
         echo ""
 
         # Log test execution

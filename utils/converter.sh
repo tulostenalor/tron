@@ -12,7 +12,7 @@ convertMilisecondsToMinutesSeconds() {
   MINUTES=$(echo "scale=0;${MILISECONDS}/60000" | bc)
   SECONDS=$(echo "scale=0;(${MILISECONDS}%60000)/1000" | bc)
 
-  echo "$MINUTES minutes $SECONDS seconds"
+  echo "$MINUTES minute(s) $SECONDS second(s)."
 }
 
 calculatePercentage() {
