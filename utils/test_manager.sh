@@ -6,7 +6,6 @@
 runSetupCommandIfRequired() {
   INSTRUCTION=$1
   DEVICE=$2
-  TEST_CONDITIONS=$3
 
   for CONDITION in $(echo "$TEST_CONDITIONS" | grep "test_setup") ; do
     CONDITION_SELECTOR=$(echo "$CONDITION" | cut -d "|" -f1)

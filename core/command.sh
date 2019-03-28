@@ -157,7 +157,7 @@ while true ; do
         # If device cannot run it, its added to ZOMBIE_THREADS pool and new (next available) device will be selected
         # If device is capable of running the instruction set, then ZOMBIE_THREAD pool is being cleared
         if $TEST_CONDITIONS_ENABLED ; then
-            if ! deviceCompatibleWithInstructionSet "$INSTRUCTIONS" "$SELECTED_DEVICE" "$TEST_CONDITIONS" ; then
+            if ! deviceCompatibleWithInstructionSet "$INSTRUCTIONS" "$SELECTED_DEVICE" ; then
                 ZOMBIE_THREADS+=($THREAD)
                 continue
             else
@@ -196,7 +196,7 @@ TOTAL_DURATION=$(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))
 
 # Duration summary
 echo "****"
-echo "Total duration: $TOTAL_DURATION."
+echo "Total duration: $TOTAL_DURATION"
 echo "****"
 
 if $GENERATE_HTML_REPORT ; then
