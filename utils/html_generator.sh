@@ -94,13 +94,16 @@ generateHtmlExecutionSummary() {
 
             if [ $TEST_FAIL -gt 0 ] ; then
                 COLOR="#ff3300"
+                TEST_SUFIX="[x] FAIL"
             elif [ $TEST_SKIP -gt 0 ] ; then
                 COLOR="#999999"
+                TEST_SUFIX=""
             else
                 COLOR="#99cc00"
+                TEST_SUFIX=""
             fi
 
-            echo "<tr><td align="left" bgcolor="$COLOR" id="testRow"><a href="$TEST_RELATIVE_PATH">--> $TEST_NAME</a></td></tr>" >> "$EXECUTION_SUMMARY"
+            echo "<tr><td align="left" bgcolor="$COLOR" id="testRow"><a href="$TEST_RELATIVE_PATH">--> $TEST_NAME $TEST_SUFIX</a></td></tr>" >> "$EXECUTION_SUMMARY"
         done
         echo "</table>" >> "$EXECUTION_SUMMARY"
     done

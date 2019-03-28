@@ -52,7 +52,7 @@ getProperty() {
   DEVICE=$1
   PROPERTY=$2
 
-  echo "$(cat $TEST_OUTPUT/$DEVICE/device-properties.txt | grep $PROPERTY | cut -d ":" -f2)"
+  echo "$(cat $TEST_OUTPUT/$DEVICE/device-properties.txt | grep $PROPERTY | cut -d ":" -f2 | tr -d '\n\t\r')"
 }
 
 ########################################
@@ -63,7 +63,6 @@ getProperty() {
 deviceCompatibleWithInstructionSet() {
   INSTRUCTIONS=$1
   DEVICE=$2
-  TEST_CONDITIONS=$3
 
   DEVICE_SDK=$(getProperty $DEVICE buildSdk)
 
@@ -90,7 +89,6 @@ deviceCompatibleWithInstructionSet() {
 deviceCompatibleWithAnInstruction() {
   INSTRUCTION=$1
   DEVICE=$2
-  TEST_CONDITIONS=$3
 
   DEVICE_SDK=$(getProperty $DEVICE buildSdk)
 

@@ -64,9 +64,9 @@ generateJunitReport() {
 
         # In case of test failure
         if grep -q "Tests run: 1,  Failures: 1" $SUMMARY ; then
-            FAILURE_LINE=$(cat $SUMMARY | grep -n "There was 1 failure:" | cut -d ":" -f1)
-            FAILURE_TYPE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f1)
-            FAILURE_MESSAGE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f2)
+            FAILURE_LINE=$(cat $SUMMARY | grep -n "There was 1 failure:" | cut -d ":" -f1 | tr -d "\n\t\r ")
+            FAILURE_TYPE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f1 | cut -d "<" -f1 | tr -d "\n\t\r ")
+            FAILURE_MESSAGE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f2 | cut -d "<" -f1 | tr -d "\n\t\r ")
             STACKTRACE_LENGHT=$(cat $SUMMARY | wc -l | tr -d "\n\t\r ")
             FAILURE_STACKTRACE=$(cat $SUMMARY | tail -$(($STACKTRACE_LENGHT-$FAILURE_LINE-2)))
 

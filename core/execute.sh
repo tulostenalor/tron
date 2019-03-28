@@ -34,7 +34,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
     # Run test setup tasks, if required by configuration
     if $TEST_SETUP_ENABLED ; then
-        runSetupCommandIfRequired "$INSTRUCTION" "$DEVICE" "$TEST_CONDITIONS"
+        runSetupCommandIfRequired "$INSTRUCTION" "$DEVICE"
     fi
 
     if $CLEAR_DATA_BEFORE_TEST ; then
@@ -92,7 +92,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         # If TEST_CONDITIONS_ENABLED flag is set to true, checks if device is capable of running the instruction
         # If device cannot run it, instruction is marked as skipped in report and device moves on to the next one
         if $TEST_CONDITIONS_ENABLED ; then
-            if ! deviceCompatibleWithAnInstruction "$INSTRUCTION" "$DEVICE" "$TEST_CONDITIONS" ; then
+            if ! deviceCompatibleWithAnInstruction "$INSTRUCTION" "$DEVICE" ; then
                 echo "RUN ($INSTRUCTION) device ($DEVICE), duration: 0.0 seconds, status: [-] SKIPPED" >> "$TIMES_OUTPUT"
 
                 if $GENERATE_HTML_REPORT ; then
