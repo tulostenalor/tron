@@ -50,7 +50,7 @@ generateJunitReport() {
     REPORT_TIMESTAMP="$(date +"%T")T$(date +"%F")"
 
     # Init junit xml file
-    echo -e "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<testsuite hostname=\"local-host\" name=\"/test-results/test-summary\" time=\"$TOTAL_TEST_DURATION\" timestamp=\"$REPORT_TIMESTAMP\"><properties />" > $REPORT_PATH
+    echo -e "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<testsuite hostname=\"local-host\" name=\"$REPORT_PATH\" time=\"$TOTAL_TEST_DURATION\" timestamp=\"$REPORT_TIMESTAMP\"><properties />" > $REPORT_PATH
 
     # Converts raw instrumentation output into JUnit xml file
     for SUMMARY in $(ls -1 $SUMMARY_PATHS) ; do
