@@ -29,11 +29,11 @@ generateDeviceLabelProperties() {
     SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
 
     if [ $FAILED -gt 0 ] ; then
-        echo "bgcolor=\"#990000\" class=\"failedTest\""
+        echo "bgcolor=\"#990000\""
     elif [ $SKIPPED -gt 0 ] ; then
-        echo "bgcolor=\"#808080\" class=\"skippedTest\""
+        echo "bgcolor=\"#808080\""
     else
-        echo "bgcolor=\"#336600\" class=\"passedTest\""
+        echo "bgcolor=\"#336600\""
     fi
 }
 
