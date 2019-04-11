@@ -205,7 +205,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         # Pull recording on success
         if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_SUCCESS)) ; then
             # PROCESS_START=$(date +%s%3N)
-            echo "Pulling video on success. Succes: $COLLECT_VIDEO_ON_SUCCESS"
+            echo "Pulling video on success. Success: $COLLECT_VIDEO_ON_SUCCESS"
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
             } &> /dev/null
