@@ -23,6 +23,70 @@ generateTestSummary() {
     sed -i -e "s~$MARKER~$TEST_DETAILS~" "$TEST_DIRECTORY/index.html"
 }
 
+generateDeviceLabelProperties() {
+    DEVICE=$1
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+
+    if [ $FAILED -gt 0 ] ; then
+        echo "bgcolor=\"#990000\""
+    elif [ $SKIPPED -gt 0 ] ; then
+        echo "bgcolor=\"#808080\""
+    else
+        echo "bgcolor=\"#336600\""
+    fi
+}
+
+generateClassLabelProperties() {
+    CLASS=$1
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$CLASS" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$CLASS" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+
+    if [ $FAILED -gt 0 ] ; then
+        echo "bgcolor=\"#cc0000\" class=\"failedTest\""
+    elif [ $SKIPPED -gt 0 ] ; then
+        echo "bgcolor=\"#8c8c8c\" class=\"skippedTest\""
+    else
+        echo "bgcolor=\"#669900\" class=\"passedTest\""
+    fi
+}
+
+generateTestLabelProperties() {
+    DEVICE=$1
+    TEST=$2
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+
+    if [ $FAILED -gt 0 ] ; then
+        echo "bgcolor=\"#ff3300\" class=\"failedTest\""
+    elif [ $SKIPPED -gt 0 ] ; then
+        echo "bgcolor=\"#999999\" class=\"skippedTest\""
+    else
+        echo "bgcolor=\"#99cc00\" class=\"passedTest\""
+    fi
+}
+
+generateTestLabelSufix() {
+    DEVICE=$1
+    TEST=$2
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+
+    if [ $FAILED -gt 0 ] ; then
+        echo "[x] FAIL"
+    else
+        echo ""
+    fi
+}
+
+generateSwitchToggle() {
+    HTML_CLASS=$1
+    TOGGLE_COPY=$2
+
+    # failedTest
+    # Failed
+    echo "<p class=\"toggle\">$TOGGLE_COPY tests:<label class=\"switch\"><input type=\"checkbox\" checked onclick=\"toggleClass('$HTML_CLASS')\"><span class=\"slider round\"></span></label></p>"
+}
+
 generateHtmlExecutionSummary() {
     TOTAL_DURATION=$1
     DEVICE_LIST=$(cat $DEVICE_LIST_OUTPUT)
@@ -36,21 +100,19 @@ generateHtmlExecutionSummary() {
     NUMBER_OF_FAILING_TESTS=$(cat $TIMES_OUTPUT | grep "FAIL" | wc -l | tr -d "\n\t\r ")
     NUMBER_OF_SKIPPED_TESTS=$(cat $TIMES_OUTPUT | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
 
-    echo "<div id="testSummary"> 
+    echo "<div id="testSummary">
             <h1>Execution summary</h1>
             <h3>$NUMBER_OF_DEVICES device(s) run $NUMBER_OF_TOTAL_TESTS tests, $NUMBER_OF_PASSING_TESTS have passed, $NUMBER_OF_FAILING_TESTS have failed and $NUMBER_OF_SKIPPED_TESTS been skipped in $TOTAL_DURATION</h3>
          </div>" >> "$EXECUTION_SUMMARY"
 
+    echo "$(generateSwitchToggle "passedTest" "Passing")" >> "$EXECUTION_SUMMARY"
+    echo "$(generateSwitchToggle "failedTest" "Failing")" >> "$EXECUTION_SUMMARY"
+    echo "$(generateSwitchToggle "skippedTest" "Skipped")" >> "$EXECUTION_SUMMARY"
+
     FIRST_DEVICE=true
     for DEVICE in $(echo "$DEVICE_LIST") ; do 
-        DEVICE_STATUS=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+        PROPERTIES=$(generateDeviceLabelProperties $DEVICE)
         TEST_LIST=$(cat $TIMES_OUTPUT | grep "$DEVICE" | cut -d "(" -f2- | cut -d ")" -f1 | sort)
-
-        if [ $DEVICE_STATUS -eq 0 ] ; then
-            COLOR="#336600"
-        else
-            COLOR="#990000"
-        fi
 
         if [ ! $FIRST_DEVICE ] ; then
           echo "</table>" >> "$EXECUTION_SUMMARY"
@@ -61,7 +123,7 @@ generateHtmlExecutionSummary() {
         DEVICE_MODEL="$(getDeviceDisplayName $DEVICE)"
 
         echo "<table id="deviceTable" border="0" width="1200" align="center">" >> "$EXECUTION_SUMMARY"
-        echo "<tr><td align="left" bgcolor="$COLOR">Device: $DEVICE_MODEL</td></tr>" >> "$EXECUTION_SUMMARY"
+        echo "<tr><td align="left" "$PROPERTIES">Device: $DEVICE_MODEL</td></tr>" >> "$EXECUTION_SUMMARY"
 
         CURRENT_CLASS_NAME=""
         for TEST in $(echo "$TEST_LIST") ; do
@@ -69,41 +131,24 @@ generateHtmlExecutionSummary() {
             TEST_NAME=$(echo "$TEST" | cut -d "#" -f2)
 
             if [ "$CURRENT_CLASS_NAME" != "$CLASS_NAME" ] ; then
-                CLASS_STATUS=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$CLASS_NAME" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+                PROPERTIES=$(generateClassLabelProperties $CLASS_NAME)
 
                 if [ "$CURRENT_CLASS_NAME" != "" ] ; then
                     echo "</table>" >> "$EXECUTION_SUMMARY"
                 fi
 
-                if [ $CLASS_STATUS -eq 0 ] ; then
-                    COLOR="#669900"
-                else
-                    COLOR="#cc0000"
-                fi
-
                 echo "<table id="classTable" border="0" width="1150" align="center">" >> "$EXECUTION_SUMMARY"
-                echo "<tr><td align="left" bgcolor="$COLOR">CLASS: $CLASS_NAME</td></tr>" >> "$EXECUTION_SUMMARY"
+                echo "<tr><td align="left" "$PROPERTIES">CLASS: $CLASS_NAME</td></tr>" >> "$EXECUTION_SUMMARY"
                 echo "<table id="testTable" border="0" width="1100" align="center">" >> "$EXECUTION_SUMMARY"
                 CURRENT_CLASS_NAME="$CLASS_NAME"
             fi
 
             TEST_HASH=$(getHash $TEST)
             TEST_RELATIVE_PATH=$(echo "./$DEVICE/$TEST_HASH/index.html" | sed s/"#"/"%23"/g)
-            TEST_FAIL=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
-            TEST_SKIP=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+            PROPERTIES=$(generateTestLabelProperties $DEVICE $TEST)
+            TEST_SUFIX=$(generateTestLabelSufix $DEVICE $TEST)
 
-            if [ $TEST_FAIL -gt 0 ] ; then
-                COLOR="#ff3300"
-                TEST_SUFIX="[x] FAIL"
-            elif [ $TEST_SKIP -gt 0 ] ; then
-                COLOR="#999999"
-                TEST_SUFIX=""
-            else
-                COLOR="#99cc00"
-                TEST_SUFIX=""
-            fi
-
-            echo "<tr><td align="left" bgcolor="$COLOR" id="testRow"><a href="$TEST_RELATIVE_PATH">--> $TEST_NAME $TEST_SUFIX</a></td></tr>" >> "$EXECUTION_SUMMARY"
+            echo "<tr><td align="left" "$PROPERTIES"><a href="$TEST_RELATIVE_PATH">--> $TEST_NAME $TEST_SUFIX</a></td></tr>" >> "$EXECUTION_SUMMARY"
         done
         echo "</table>" >> "$EXECUTION_SUMMARY"
     done
