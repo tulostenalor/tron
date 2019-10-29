@@ -77,6 +77,8 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         # PROCESS_START=$(date +%s%3N)
         {
             adb -s $DEVICE logcat -c
+            adb -s $DEVICE logcat -v threadtime > $LOGCAT_FILE &
+            PID_LOGCAT=$!
         } &> /dev/null
         # PROCESS_END=$(date +%s%3N)  
         # echo "Device logs cleared, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
@@ -110,7 +112,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
     # Execute instruction
     START_TIME=$(getCurrentDate)
-    adb -s $DEVICE shell am instrument -w -r -e class $INSTRUCTION $TEST_RUNNER > $RUNNING_TEST
+    adb -s $DEVICE shell am instrument -w -r $ARGUMENT -e class $INSTRUCTION $TEST_RUNNER > $RUNNING_TEST
     END_TIME=$(getCurrentDate)
 
     # Capture duration test execution summary
@@ -128,7 +130,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     fi
 
     # Check if test run successfuly
-    if grep -q "FAILURES!!!" $RUNNING_TEST ; then
+    if ((grep -q "FAILURES!!!" $RUNNING_TEST) || (grep -q "Process crashed while executing" $RUNNING_TEST) || (grep -q "shortMsg=Process crashed." $RUNNING_TEST) || (grep -q "Bad component name: class" $RUNNING_TEST) || (grep -q "INSTRUMENTATION_RESULT: longMsg" $RUNNING_TEST) || (grep -q "INSTRUMENTATION_FAILED" $RUNNING_TEST)) ; then
         FAIL_REASON=$(head -5 "$RUNNING_TEST")
         FAIL_REASON=${FAIL_REASON//[$'\t\r\n ' / ]}
         FAIL_REASON=${FAIL_REASON//[$'\t\r\n']}
@@ -141,8 +143,11 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
         # Collect logs on failure
         if $COLLECT_LOGCAT_ON_FAILURE ; then
-            adb -s $DEVICE logcat -d "$TEST_LOGCAT_PARAMETERS" > $LOGCAT_FILE
-            sed -i '/^$/d' $LOGCAT_FILE
+            # adb -s $DEVICE logcat -d -v threadtime > $LOGCAT_FILE
+            {
+                kill $PID_LOGCAT
+                sleep 1
+            } &> /dev/null
         fi
 
         # Collect DB content on failure
@@ -174,6 +179,9 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         echo "[x] FAIL ($DURATION s)"
         echo ""
 
+        # Log to failure list
+        echo -e "$TEST_DELIMITER\n$INSTRUCTION" >> "$TEST_FAILURES_OUTPUT"
+
         # Log test execution
         echo "RUN ($INSTRUCTION) device ($DEVICE), duration: $DURATION seconds, status: [x] FAIL" >> "$TIMES_OUTPUT"
 
@@ -181,10 +189,22 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         if $GENERATE_HTML_REPORT ; then
             generateTestSummary $DEVICE $INSTRUCTION "[x] FAIL."
         fi
+    elif grep -q "org.junit.AssumptionViolatedException" $RUNNING_TEST ; then
+        echo "RUN ($INSTRUCTION) device ($DEVICE), duration: 0.0 seconds, status: [-] SKIPPED" >> "$TIMES_OUTPUT"
+        if $GENERATE_HTML_REPORT ; then
+            generateTestSummary $DEVICE $INSTRUCTION "[-] SKIPPED."
+        fi
+
+        echo "[-] SKIPPED (0.0 s)"
+        echo ""
     else
         # Collect logs on success
         if $COLLECT_LOGCAT_ON_SUCCESS ; then
-            adb -s $DEVICE logcat -d "$TEST_LOGCAT_PARAMETERS" > $LOGCAT_FILE
+            # adb -s $DEVICE logcat -d -v threadtime > $LOGCAT_FILE
+            {
+                kill $PID_LOGCAT
+                sleep 1
+            } &> /dev/null
         fi
 
         # Collect DB content on success
@@ -205,7 +225,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         # Pull recording on success
         if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_SUCCESS)) ; then
             # PROCESS_START=$(date +%s%3N)
-            echo "Pulling video on success. Success: $COLLECT_VIDEO_ON_SUCCESS"
+            echo "Pulling video on success. Succes: $COLLECT_VIDEO_ON_SUCCESS"
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
             } &> /dev/null
@@ -230,6 +250,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         # PROCESS_START=$(date +%s%3N)
         {
             adb -s $DEVICE shell rm "$TEST_SDCARD_RECORDING"
+            adb -s $DEVICE shell am force-stop "$DEBUG_PACKAGE" 
         } &> /dev/null
         # PROCESS_END=$(date +%s%3N)  
         # echo "Video recording purged from device, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
