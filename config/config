@@ -22,10 +22,12 @@ ARTEFACTS_OUTPUT="./artefacts"
 TEST_OUTPUT="./test-results"
 
 DEVICE_LIST_OUTPUT="$ARTEFACTS_OUTPUT/device-list.txt"
+DEVICE_LIST_TEMP_OUTPUT="$ARTEFACTS_OUTPUT/device-temp-list.txt"
 TEST_RUNNER_OUTPUT="$ARTEFACTS_OUTPUT/test-runner.txt"
 SCAN_OUTPUT="$ARTEFACTS_OUTPUT/scan-tests.txt"
 INSTRUCTION_OUTPUT="$ARTEFACTS_OUTPUT/instruction-log.txt"
 TIMES_OUTPUT="$TEST_OUTPUT/times.txt"
+TEST_FAILURES_OUTPUT="$ARTEFACTS_OUTPUT/test-failures-list.txt"
 
 TEST_CONDITION_INPUT="./config/conditions"
 
