@@ -31,6 +31,7 @@ fi
 # Setting screen brightness & ensure mocking location is off
 adb -s $DEVICE shell settings put system screen_brightness $BRIGHTNESS
 adb -s $DEVICE shell settings put secure mock_location 0
+adb -s $DEVICE shell settings put system screen_off_timeout 600000
 
 # Disable non-SDK interface popup (only affecting Pie)
 adb -s $DEVICE shell settings put global hidden_api_policy_pre_p_apps $HIDDEN_API_POLICY
@@ -41,9 +42,6 @@ adb -s $DEVICE shell rm -r -f ./sdcard/Pictures/Screenshots/**
 
 # Killing all running apps (including systemUI, thus purging all popups)
 killAllRunningApps $DEVICE
-
-# Gather basic details about a device
-generateDeviceProperties $DEVICE
 
 # Installing main & test apps
 adb -s $DEVICE install $APP_PATH/$APP_PREFIX
