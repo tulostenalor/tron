@@ -54,8 +54,8 @@ generateClassLabelProperties() {
 generateTestLabelProperties() {
     DEVICE=$1
     TEST=$2
-    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
-    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
 
     if [ $FAILED -gt 0 ] ; then
         echo "bgcolor=\"#ff3300\" class=\"failedTest\""
@@ -69,7 +69,7 @@ generateTestLabelProperties() {
 generateTestLabelSufix() {
     DEVICE=$1
     TEST=$2
-    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
 
     if [ $FAILED -gt 0 ] ; then
         echo "[x] FAIL"
