@@ -15,7 +15,9 @@ runSetupCommandIfRequired() {
 
     if [ $CONDITION_CHECK -gt 0 ] ; then
       if [ "$CONDITION_COMMAND" == "clear" ] ; then
-        adb -s $DEVICE shell pm clear $DEBUG_PACKAGE
+        {
+          adb -s $DEVICE shell pm clear $DEBUG_PACKAGE
+        } &> /dev/null
       fi
     fi
   done

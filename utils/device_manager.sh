@@ -7,16 +7,36 @@
 ########################################
 deviceCheck() {
   if [ "$1" == "" ] ; then
-    adb devices | grep -v "List" | grep "device" | cut -f1 > $DEVICE_LIST_OUTPUT
+    adb devices | grep -v "List" | grep "device" | cut -f1 > $DEVICE_LIST_TEMP_OUTPUT
   else
     SELECTED_DEVICES=$1
     CONNECTED_DEVICES=$(adb devices | grep -v List | grep device)
 
     # Filter selected devices by validating with connected ones
     for DEVICE in $(echo "$SELECTED_DEVICES" | tr "," " ") ; do
-      echo "$CONNECTED_DEVICES" | grep "$DEVICE" | cut -f1 >> $DEVICE_LIST_OUTPUT
+      echo "$CONNECTED_DEVICES" | grep "$DEVICE" | cut -f1 >> $DEVICE_LIST_TEMP_OUTPUT
     done
   fi
+
+  # Get APK minSdk
+  MIN_SDK=$(apkanalyzer manifest min-sdk $APP_PATH/$APP_PREFIX | tr -d '\n\t\r ')
+
+  # Check if device meets APK criteria
+  for DEVICE in $(cat $DEVICE_LIST_TEMP_OUTPUT) ; do
+    
+    # Gather basic details about a device
+    generateDeviceProperties $DEVICE
+    DEVICE_SDK=$(getProperty $DEVICE buildSdk | tr -d '\n\t\r ')
+
+    # If device meets minsdk criteria add it to the list
+    if [ $DEVICE_SDK -ge $MIN_SDK ] ; then
+      echo "$DEVICE" >> "$DEVICE_LIST_OUTPUT"
+    else
+      echo "[!] Rejecting device: $DEVICE (with sdk: $DEVICE_SDK) as it does not meet APKs minSdk of: $MIN_SDK"
+    fi
+  done
+
+  rm "$DEVICE_LIST_TEMP_OUTPUT"
 }
 
 ########################################

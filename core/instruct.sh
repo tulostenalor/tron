@@ -28,21 +28,27 @@ TOTAL_TESTS=0
 # Itterate through the lines in scan file to generate instruction file
 INDEX=-1
 while read LINE; do
-
     # When package is matched, class name can be found in the same line
     if [[ $LINE == "$PACKAGE"* ]] ; then
         CLASS_NAME=$(echo "$LINE" | cut -d '=' -f2 | cut -d ':' -f1 | tr -d '\t\r\n ')
+        PARAMETERISED_CLASS=$(echo "$CLASS_NAME" | grep -c "\\$" | tr -d '\t\r\n ')
         continue
     fi
 
     # When test line is found, extract name and check for duplications
     if [[ $LINE == *"test="* ]] ; then
-        TEST_NAME=$(echo "$LINE" | cut -d '=' -f2 | tr -d '\t\r\n ')
+
+        # Different implementation for parameterised tests
+        if [ $PARAMETERISED_CLASS -gt 0 ] ; then
+            CLASS_NAME=$(echo "$CLASS_NAME" | cut -d "$" -f1)
+            TEST_NAME=""
+        else
+            TEST_NAME=$(echo "$LINE" | cut -d '=' -f2 | tr -d '\t\r\n ')
+        fi
 
         # Find duplications by itterating through existing tests
         TEST_DUPLICATION="false"
-        for TEST in "${!TEST_NAMES[@]}"
-        do
+        for TEST in "${!TEST_NAMES[@]}" ; do
             # If duplicated test & class name is found, set duplication flag to true (TEST_DUPLICATION="true")
             if [ "${TEST_NAMES[$TEST]}" == "$TEST_NAME" ] && [ "${CLASS_NAMES[$TEST]}" == "$CLASS_NAME" ] ; then
                 TEST_DUPLICATION="true"
@@ -67,8 +73,12 @@ for N in "${!CLASS_NAMES[@]}" ; do
     # Add delimiter
     echo "$TEST_DELIMITER" >> $INSTRUCTION_OUTPUT
 
-    # Add instruction line
-    echo "${CLASS_NAMES[$N]}#${TEST_NAMES[$N]}" >> $INSTRUCTION_OUTPUT
+    # Add instruction line (varies between parameterised tests)
+    if [ "${TEST_NAMES[$N]}" == "" ] ; then
+        echo "${CLASS_NAMES[$N]}" >> $INSTRUCTION_OUTPUT
+    else
+        echo "${CLASS_NAMES[$N]}#${TEST_NAMES[$N]}" >> $INSTRUCTION_OUTPUT
+    fi
 
     # Count number of tests
     TOTAL_TESTS=$((TOTAL_TESTS + 1))

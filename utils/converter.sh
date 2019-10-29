@@ -26,5 +26,15 @@ calculatePercentage() {
 getHash() {
   STRING=$1
 
-  echo "$STRING" | md5sum | cut -d " " -f1 
+  echo "$STRING" | shasum | cut -d " " -f1 
+}
+
+getCurrentDate() {
+  OSTYPE=$(uname -s)
+
+  if [ "$OSTYPE" == "Darwin" ] ; then
+    echo "$(gdate +%s%N | cut -b1-13)"
+  else
+    echo "$(date +%s%3N)"
+  fi
 }

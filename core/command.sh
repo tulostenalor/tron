@@ -7,7 +7,7 @@ source ./utils/converter.sh
 source ./utils/junit_generator.sh
 source ./utils/html_generator.sh
 
-START_TIME=$(date +%s%3N)
+START_TIME=$(getCurrentDate)
 CONCURRENT=$1
 
 # Pull list of devices into an array
@@ -191,7 +191,7 @@ if $GENERATE_JUNIT_REPORT ; then
 fi
 
 # Capture end time
-END_TIME=$(date +%s%3N)
+END_TIME=$(getCurrentDate)
 TOTAL_DURATION=$(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))
 
 # Duration summary
