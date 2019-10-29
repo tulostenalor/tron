@@ -11,14 +11,16 @@ TARGET_PACKAGE=""
 TARGET_CLASS=""
 ANNOTATION=""
 MODE=false
+ARGUMENT=""
 
-while getopts d:p:c:a:m: flag ; do
+while getopts d:p:c:a:m:e: flag ; do
     case "${flag}" in
         d) SELECTED_DEVICES=${OPTARG};;
         p) TARGET_PACKAGE=${OPTARG};;
         c) TARGET_CLASS=${OPTARG};;
-        a) ANNOTATION=$OPTARG;;
-        m) MODE=$OPTARG;;
+        a) ANNOTATION=${OPTARG};;
+        m) MODE=${OPTARG};;
+        e) ARGUMENT=${OPTARG};;
         *) echo "Invalid flag!";;
     esac
 done
@@ -48,6 +50,7 @@ runScriptInParallelOnDevices "./utils/instrumentation_prep.sh" "Preparation"
 # Export global variables for downstream scripts to share
 export TEST_CONDITIONS=$(cat "$TEST_CONDITION_INPUT")
 export TEST_RUNNER=$(cat "$TEST_RUNNER_OUTPUT")
+export ARGUMENT="$ARGUMENT"
 
 # Commands devices to run instructions
 ./core/command.sh $CONCURRENT
