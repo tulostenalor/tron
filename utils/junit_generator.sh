@@ -54,26 +54,26 @@ generateJunitReport() {
 
     # Converts raw instrumentation output into JUnit xml file
     for SUMMARY in $(ls -1 $SUMMARY_PATHS) ; do
-        TESTCASE_CLASS=$(cat $SUMMARY | grep "INSTRUMENTATION_STATUS: class=" | tail -1 | cut -d "=" -f2)
-        TESTCASE_NAME=$(cat $SUMMARY | grep "INSTRUMENTATION_STATUS: test=" | tail -1 | cut -d "=" -f2)
+        TESTCASE_CLASS=$(cat $SUMMARY | grep "INSTRUMENTATION_STATUS: class=" | tail -1 | cut -d "=" -f2 | tr -d "\n\t\r ")
+        TESTCASE_NAME=$(cat $SUMMARY | grep "INSTRUMENTATION_STATUS: test=" | tail -1 | cut -d "=" -f2 | tr -d "\n\t\r ")
         if [ $# -eq 0 ] ; then
-            TESTCASE_DURATION=$(cat "$TIMES_OUTPUT" | grep "$TESTCASE_CLASS#$TESTCASE_NAME" | cut -d " " -f6)
+            TESTCASE_DURATION=$(cat "$TIMES_OUTPUT" | grep "$TESTCASE_CLASS#$TESTCASE_NAME" | cut -d " " -f6 | tr -d "\n\t\r ")
         else
-            TESTCASE_DURATION=$(cat "$TIMES_OUTPUT" | grep "$DEVICE" | grep "$TESTCASE_CLASS#$TESTCASE_NAME" | cut -d " " -f6)
+            TESTCASE_DURATION=$(cat "$TIMES_OUTPUT" | grep "$DEVICE" | grep "$TESTCASE_CLASS#$TESTCASE_NAME" | cut -d " " -f6 | tr -d "\n\t\r ")
         fi
 
         # In case of test failure
-        if grep -q "Tests run: 1,  Failures: 1" $SUMMARY ; then
-            FAILURE_LINE=$(cat $SUMMARY | grep -n "There was 1 failure:" | cut -d ":" -f1 | tr -d "\n\t\r ")
-            FAILURE_TYPE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f1 | cut -d "<" -f1 | tr -d "\n\t\r ")
-            FAILURE_MESSAGE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f2 | cut -d "<" -f1 | tr -d "\n\t\r ")
-            STACKTRACE_LENGHT=$(cat $SUMMARY | wc -l | tr -d "\n\t\r ")
+        if ((grep -q "FAILURES!!!" $SUMMARY) || (grep -q "Process crashed while executing" $SUMMARY) || (grep -q "shortMsg=Process crashed." $SUMMARY) || (grep -q "Bad component name: class" $SUMMARY) || (grep -q "INSTRUMENTATION_RESULT: longMsg" $SUMMARY) || (grep -q "INSTRUMENTATION_FAILED" $SUMMARY)) ; then
+            FAILURE_LINE=$(cat $SUMMARY | grep -n "There was 1 failure:" | cut -d ":" -f1 | tr -d "<>&\n\t\r ")
+            FAILURE_TYPE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f1 | tr -d "<>&\n\t\r ")
+            FAILURE_MESSAGE=$(sed -n "$(($FAILURE_LINE+2))p" $SUMMARY | cut -d ":" -f2 | tr -d "<>&\n\t\r ")
+            STACKTRACE_LENGHT=$(cat $SUMMARY | wc -l | tr -d "<>&\n\t\r ")
             FAILURE_STACKTRACE=$(cat $SUMMARY | tail -$(($STACKTRACE_LENGHT-$FAILURE_LINE-2)))
 
             echo -e "\t<testcase classname=\"$TESTCASE_CLASS\" name=\"$TESTCASE_NAME\" time=\"$TESTCASE_DURATION\">" >> $REPORT_PATH
 
             echo -e "\t\t<failure message=\"$FAILURE_MESSAGE\" type=\"$FAILURE_TYPE\">" >> $REPORT_PATH 
-            echo "$FAILURE_STACKTRACE" >> $REPORT_PATH
+            echo "$FAILURE_STACKTRACE" | tr -d "<>&" >> $REPORT_PATH
             echo -e "\t\t</failure>\n\t</testcase>" >> $REPORT_PATH
         else
             echo -e "\t<testcase classname=\"$TESTCASE_CLASS\" name=\"$TESTCASE_NAME\" time=\"$TESTCASE_DURATION\" />" >> $REPORT_PATH
