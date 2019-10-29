@@ -109,9 +109,9 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     fi
 
     # Execute instruction
-    START_TIME=$(date +%s%3N)
+    START_TIME=$(getCurrentDate)
     adb -s $DEVICE shell am instrument -w -r -e class $INSTRUCTION $TEST_RUNNER > $RUNNING_TEST
-    END_TIME=$(date +%s%3N)
+    END_TIME=$(getCurrentDate)
 
     # Capture duration test execution summary
     DURATION=$(convertMilisecondsToSeconds $((END_TIME-START_TIME)))
