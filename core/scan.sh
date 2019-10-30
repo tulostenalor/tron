@@ -13,8 +13,21 @@ TARGET_PACKAGE=$1
 TARGET_CLASS=$2
 ANNOTATION=$3
 
-# Assigning first available device
-DEVICE=$(cat $DEVICE_LIST_OUTPUT | tail -1)
+# Awaiting the first device to complete preparation
+TIMEOUT=0
+while [ ! -f $DEVICE_LIST_PREP_COMPLETE ] ; do
+    if [ $TIMEOUT -gt 600 ] ; then
+        echo "Took too long to prepare devices!"
+        exit 1
+    fi
+
+    sleep 0.1
+    let TIMEOUT=TIMEOUT+1
+done
+
+# Select first (fastest) device
+DEVICE=$(head -1 $DEVICE_LIST_PREP_COMPLETE)
+echo "Scan can proceed, first device is: $DEVICE"
 
 # Obtain test instrumentation runner for test package
 adb -s $DEVICE shell pm list instrumentation | grep "$PACKAGE" | cut -d ":" -f2 | cut -d " " -f1 | tr -d "\n\t\r " > $TEST_RUNNER_OUTPUT

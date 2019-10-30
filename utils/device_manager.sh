@@ -36,7 +36,14 @@ deviceCheck() {
     fi
   done
 
+  # Remove obsolete config file
   rm "$DEVICE_LIST_TEMP_OUTPUT"
+
+   # Do not continue if no devices connected
+  if [ ! -f $DEVICE_LIST_OUTPUT ] ; then
+    echo "[!] No connected devices!"
+    exit 1
+  fi
 }
 
 ########################################
