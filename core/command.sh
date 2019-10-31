@@ -9,27 +9,11 @@ source ./utils/html_generator.sh
 
 START_TIME=$(getCurrentDate)
 CONCURRENT=$1
+EXPECTED_DEVICE_NUMBER=$(cat $DEVICE_LIST_OUTPUT | wc -l | tr -d "\n\t\r ")
 
-# Pull list of devices into an array
-DEVICES=()
-for DEVICE in $(cat $DEVICE_LIST_OUTPUT) ; do
-    DEVICES+=("$DEVICE")
-done
-
-# If no devices are connected, then there is no point of running tests, right?
-if [ ${#DEVICES[@]} -eq 0 ]; then
-    echo "No attached devices"
-    exit 1
-fi
-
-# Number of parallel threads is equal to number of devices
-THREADS=${#DEVICES[@]}
-
-# Calculate total number of tests (based on delimter occurance) and execution mode selected
-if $CONCURRENT ; then
-    NUMBER_OF_TESTS=$THREADS
-else
-    NUMBER_OF_TESTS=$(grep -c "$TEST_DELIMITER" $INSTRUCTION_OUTPUT)
+# Reset test duration summary file
+if [ -e $TIMES_OUTPUT ]; then
+    rm "$TIMES_OUTPUT"
 fi
 
 ########################################
@@ -76,15 +60,59 @@ createTestInstructionSet() {
     done
 }
 
+########################################
+# Scans list of devices that completed preparation process
+# Updates sharded run paramters with new device details
+########################################
+updateDeviceList() {
+    for DEVICE in $(cat $DEVICE_LIST_PREP_COMPLETE) ; do
+        if [[ ! "${DEVICES[@]}" =~ "${DEVICE}" ]] ; then
+            DEVICES+=("$DEVICE")
+            THREADS=${#DEVICES[@]}
+            THREAD_POOL[${#THREAD_POOL[@]}]=$DEFAULT_PID
+
+            echo "[!] New device ($DEVICE) added, now with total of $THREADS devices."
+        fi
+    done
+}
+
+# For concurrent run we await all devices to complete their preparation process prior continuing
+# Execution time will not benefit from asynchronous execution in this mode
+if $CONCURRENT ; then
+    echo "Awaiting all devices to complete preperation."
+
+    TIMEOUT=0
+    while [ $(cat $DEVICE_LIST_PREP_COMPLETE | wc -l | tr -d "\n\t\r ") -ne $EXPECTED_DEVICE_NUMBER ] ; do
+        if [ $TIMEOUT -gt 600 ] ; then
+            echo "Took too long to prepare all devices!"
+            exit 1
+        fi
+
+        sleep 0.5
+        let TIMEOUT=TIMEOUT+1
+    done
+fi
+
+# Pull list of ready devices into an array
+DEVICES=()
+for DEVICE in $(cat $DEVICE_LIST_PREP_COMPLETE) ; do
+    DEVICES+=("$DEVICE")
+done
+
+# Number of parallel threads is equal to number of devices
+THREADS=${#DEVICES[@]}
+
 # Assign default (idle) pid to all device threads
 THREAD_POOL=()
 for ((i=0;i<$THREADS;i++)); do
     THREAD_POOL[i]=$DEFAULT_PID
 done
 
-# Reset test duration summary file
-if [ -e $TIMES_OUTPUT ]; then
-    rm "$TIMES_OUTPUT"
+# Calculate total number of tests (based on delimter occurance) and execution mode selected
+if $CONCURRENT ; then
+    NUMBER_OF_TESTS=$THREADS
+else
+    NUMBER_OF_TESTS=$(grep -c "$TEST_DELIMITER" $INSTRUCTION_OUTPUT)
 fi
 
 ########################################
@@ -94,6 +122,11 @@ ZOMBIE_THREADS=()
 EXECUTION_PROGRESS=0
 TEST_RUN_COMPLETE=false
 while true ; do
+    # It will attempt to update list of currently running devices when expected number is not meet
+    if [[ $EXPECTED_DEVICE_NUMBER -ne $THREADS ]] ; then
+        updateDeviceList
+    fi
+
     # Find first idle process in thread pool (initially all are)
     THREAD=-1
     IDLE_THREAD=0
@@ -106,7 +139,7 @@ while true ; do
             # In specific case if none of the threads (devices) meets the conditions of the instruction, execution is stopped
             # If TEST_CONDITIONS_ENABLED flag is set to false, then first free thread is selected to run the instruction
             if [[ "${ZOMBIE_THREADS[@]}" =~ "${PROCESS}" ]] && [[ $TEST_CONDITIONS_ENABLED ]] ; then
-                if [ ${#ZOMBIE_THREADS[@]} -eq $THREADS ] ; then
+                if [ ${#ZOMBIE_THREADS[@]} -eq $EXPECTED_DEVICE_NUMBER ] ; then
                     echo "===== There are no devices compatible with this instruction set! ====="
                     exit 1
                 else
