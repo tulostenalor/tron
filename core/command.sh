@@ -205,7 +205,7 @@ while true ; do
 
     # Output message
     PROGRESS=$(calculatePercentage "$(($EXECUTION_PROGRESS+1))" "$NUMBER_OF_TESTS")
-    echo "Instruction set started: $(($EXECUTION_PROGRESS+1)) of $NUMBER_OF_TESTS [$PROGRESS%]"
+    echo -e "\033[1;34mInstruction set started: \033[0m\033[1;30m$(($EXECUTION_PROGRESS+1)) \033[0mof \033[1;30m$NUMBER_OF_TESTS \033[0m[\033[1;30m$PROGRESS%\033[0m]"
     
     # Assigning a new PID to a thread in a pool
     THREAD_POOL[$THREAD]=$PID
@@ -229,7 +229,7 @@ TOTAL_DURATION=$(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))
 
 # Duration summary
 echo "****"
-echo "Total duration: $TOTAL_DURATION"
+echo -e "Total duration: \033[1;30m$TOTAL_DURATION\033[0m"
 echo "****"
 
 if $GENERATE_HTML_REPORT ; then

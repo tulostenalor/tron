@@ -53,9 +53,5 @@ PROCESS_NUMBER=$2
   adb -s $DEVICE logcat -c
 } &> /dev/null
 
-if [ "$DEVICE" == "3d4fccfb" ] ; then
-  sleep 10
-fi
-
 echo "Preparation complete => $PROCESS_NUMBER for device => $DEVICE"
 echo "$DEVICE" >> "$DEVICE_LIST_PREP_COMPLETE"

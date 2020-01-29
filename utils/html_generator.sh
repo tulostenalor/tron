@@ -82,9 +82,7 @@ generateSwitchToggle() {
     HTML_CLASS=$1
     TOGGLE_COPY=$2
 
-    # failedTest
-    # Failed
-    echo "<p class=\"toggle\">$TOGGLE_COPY tests:<label class=\"switch\"><input type=\"checkbox\" checked onclick=\"toggleClass('$HTML_CLASS')\"><span class=\"slider round\"></span></label></p>"
+    echo "<p class=\"toggle\">$TOGGLE_COPY tests:<label class=\"switch\"><input type=\"checkbox\" id=\"toggle$TOGGLE_COPY\" checked onclick=\"toggleState('toggle$TOGGLE_COPY', '$HTML_CLASS')\"><span class=\"slider round\"></span></label></p>"
 }
 
 generateHtmlExecutionSummary() {

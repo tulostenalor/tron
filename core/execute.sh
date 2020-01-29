@@ -37,16 +37,6 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         runSetupCommandIfRequired "$INSTRUCTION" "$DEVICE"
     fi
 
-    if $CLEAR_DATA_BEFORE_TEST ; then
-        # Clear data before test run
-        # PROCESS_START=$(date +%s%3N)
-        {
-            adb -s $DEVICE shell pm clear $PACKAGE.debug
-        } &> /dev/null
-        # PROCESS_END=$(date +%s%3N)
-        # echo "App data cleared, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
-    fi
-
     # Create output directory for an instruction
     INSTRUCTION_HASH=$(getHash $INSTRUCTION)
     TEST_DIRECTORY="$TEST_OUTPUT/$DEVICE/$INSTRUCTION_HASH"
@@ -61,32 +51,10 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     PREFERENCES_FILE="$TEST_DIRECTORY/$TEST_PREFERENCES_FILE"
     BUGREPORT_FILE="$TEST_DIRECTORY/$TEST_BUGREPORT_FILE"
 
-    # Start video recording
-    if $RECORD_VIDEO_FOR_EACH_TEST ; then
-        # PROCESS_START=$(date +%s%3N)
-        {
-            adb -s $DEVICE shell screenrecord "$TEST_RECORDING_PARAMETERS" "$TEST_SDCARD_RECORDING" &
-            PID_RECORDING=$!
-        } &> /dev/null
-        # PROCESS_END=$(date +%s%3N)
-        # echo "Video recording started, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
-    fi
-
-    # Clear logcat before test start
-    if [[ $COLLECT_LOGCAT_ON_SUCCESS || $COLLECT_LOGCAT_ON_FAILURE ]] ; then
-        # PROCESS_START=$(date +%s%3N)
-        {
-            adb -s $DEVICE logcat -c
-            adb -s $DEVICE logcat -v threadtime > $LOGCAT_FILE &
-            PID_LOGCAT=$!
-        } &> /dev/null
-        # PROCESS_END=$(date +%s%3N)  
-        # echo "Device logs cleared, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
-    fi
-
     # Obtain class and method names
     INSTRUCTION_CLASS=$(echo $INSTRUCTION | cut -d "#" -f1 | rev | cut -d "." -f1 | rev)
     INSTRUCTION_METHOD=$(echo $INSTRUCTION | cut -d "#" -f2)
+    INSTRUCTION_SUFFIX="=> \033[1;30mClass: \033[0m\033[3m$INSTRUCTION_CLASS \033[0m| \033[1;30mMethod: \033[0m\033[3m$INSTRUCTION_METHOD\033[0m"
     PROGRESS=$(calculatePercentage "$(($EXECUTION_PROGRESS+1))" "$NUMBER_OF_INSTRUCTIONS")
 
     # Output message based on execution mode
@@ -103,50 +71,83 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
                 continue
             fi
         fi
-
-        echo "Instruction details => Class: $INSTRUCTION_CLASS | Method: $INSTRUCTION_METHOD"
-        echo "Instruction running => Device: $DEVICE | $(($EXECUTION_PROGRESS+1)) of $NUMBER_OF_INSTRUCTIONS [$PROGRESS%]"
-    else
-        echo "Instruction details => Class: $INSTRUCTION_CLASS | Method: $INSTRUCTION_METHOD"
+        echo -e "\033[1;33mInstruction running \033[0m=> \033[1;30mDevice: \033[0m\033[3m$DEVICE | \033[1;30m$(($EXECUTION_PROGRESS+1)) \033[0mof \033[1;30m$NUMBER_OF_INSTRUCTIONS \033[0m[\033[1;30m$PROGRESS%\033[0m]"
     fi
 
-    # Execute instruction
-    START_TIME=$(getCurrentDate)
-    adb -s $DEVICE shell am instrument -w -r $ARGUMENT -e class $INSTRUCTION $TEST_RUNNER > $RUNNING_TEST
-    END_TIME=$(getCurrentDate)
+    CURRENT_ATTEMPT=1
+    while [ $CURRENT_ATTEMPT -le $RUN_ATTEMPTS ] ; do
 
-    # Capture duration test execution summary
-    DURATION=$(convertMilisecondsToSeconds $((END_TIME-START_TIME)))
+        # Additional message when rerunning an instruction set
+        if [ $CURRENT_ATTEMPT -gt 1 ] ; then
+            echo -e "\033[1;35m[!] Rerunning instruction \033[0m=> \033[1;30mDevice: \033[0m\033[3m$DEVICE | \033[1;30mRerun attempt: \033[0m\033[3m$(($CURRENT_ATTEMPT-1)) $INSTRUCTION_SUFFIX"
+        fi
 
-    if $RECORD_VIDEO_FOR_EACH_TEST ; then
-        # Stop recording process
-        # PROCESS_START=$(date +%s%3N)
+        # Clear app data before a test
+        if $CLEAR_DATA_FOR_EACH_TEST || [ $CURRENT_ATTEMPT -gt 1 ] ; then
         {
-            kill $PID_RECORDING
-            sleep 1
+            adb -s $DEVICE shell pm clear $PACKAGE.debug
         } &> /dev/null
-        # PROCESS_END=$(date +%s%3N)  
-        # echo "Video recording stopped, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
-    fi
+        fi
 
-    # Check if test run successfuly
-    if ((grep -q "FAILURES!!!" $RUNNING_TEST) || (grep -q "Process crashed while executing" $RUNNING_TEST) || (grep -q "shortMsg=Process crashed." $RUNNING_TEST) || (grep -q "Bad component name: class" $RUNNING_TEST) || (grep -q "INSTRUMENTATION_RESULT: longMsg" $RUNNING_TEST) || (grep -q "INSTRUMENTATION_FAILED" $RUNNING_TEST)) ; then
-        FAIL_REASON=$(head -5 "$RUNNING_TEST")
-        FAIL_REASON=${FAIL_REASON//[$'\t\r\n ' / ]}
-        FAIL_REASON=${FAIL_REASON//[$'\t\r\n']}
-    else
-        FAIL_REASON=""
-    fi
+        # Start video recording
+        if $RECORD_VIDEO_FOR_EACH_TEST || [[ $CURRENT_ATTEMPT -gt 1 && $RECORD_VIDEO_FOR_RERUN ]] ; then
+            {
+                adb -s $DEVICE shell screenrecord "$TEST_RECORDING_PARAMETERS" "$TEST_SDCARD_RECORDING" &
+                PID_RECORDING=$!
+            } &> /dev/null
+        fi
 
-    # If 'FAIL_REASON' is not empty - it signals a failure
-    if [ ! -z "$FAIL_REASON" ] ; then
+        # Clear logcat before test start
+        if $RECORD_LOGCAT_FOR_EACH_TEST || [[ $CURRENT_ATTEMPT -gt 1 && $RECORD_VIDEO_FOR_RERUN ]] ; then
+            {
+                adb -s $DEVICE logcat -c
+                adb -s $DEVICE logcat -v threadtime > $LOGCAT_FILE &
+                PID_LOGCAT=$!
+            } &> /dev/null
+        fi
+
+        # Execute instruction
+        START_TIME=$(getCurrentDate)
+        adb -s $DEVICE shell am instrument -w -r $ARGUMENT -e class $INSTRUCTION $TEST_RUNNER > $RUNNING_TEST
+        END_TIME=$(getCurrentDate)
+
+        # Capture duration test execution summary
+        DURATION=$(convertMilisecondsToSeconds $((END_TIME-START_TIME)))
+
+        if $RECORD_VIDEO_FOR_EACH_TEST || [[ $CURRENT_ATTEMPT -gt 1 && $RECORD_VIDEO_FOR_RERUN ]] ; then
+            {
+                kill $PID_RECORDING
+                sleep 1
+            } &> /dev/null
+        fi
 
         # Collect logs on failure
-        if $COLLECT_LOGCAT_ON_FAILURE ; then
-            # adb -s $DEVICE logcat -d -v threadtime > $LOGCAT_FILE
+        if $RECORD_LOGCAT_FOR_EACH_TEST || [[ $CURRENT_ATTEMPT -gt 1 && $RECORD_VIDEO_FOR_RERUN ]] ; then
             {
                 kill $PID_LOGCAT
                 sleep 1
+            } &> /dev/null
+        fi
+
+        if checkTestResult "$FAILURE_CAUSES" "$RUNNING_TEST" ; then
+            IS_FAILURE=true
+        else
+            IS_FAILURE=false
+            break
+        fi
+
+        # Increment rerun count
+        let CURRENT_ATTEMPT=CURRENT_ATTEMPT+1
+    done
+
+    ##### Checks here ->
+
+    # Check if test run successfuly
+    if $IS_FAILURE ; then
+        # Collect logs on failure
+        if ! $COLLECT_LOGCAT_ON_FAILURE ; then
+            {
+                rm $LOGCAT_FILE
             } &> /dev/null
         fi
 
@@ -166,17 +167,15 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         fi
 
         # Pull recording on failure
-        if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_FAILURE)) ; then
-            # PROCESS_START=$(date +%s%3N)
+        if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_FAILURE)) || [[ $CURRENT_ATTEMPT -gt 1 && $RECORD_VIDEO_FOR_RERUN && $COLLECT_VIDEO_ON_FAILURE ]] ; then
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
+                adb -s $DEVICE shell rm "$TEST_SDCARD_RECORDING"
             } &> /dev/null
-            # PROCESS_END=$(date +%s%3N)  
-            # echo "Video recording pulled on failure, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
         fi
 
         # Failure
-        echo "[x] FAIL ($DURATION s)"
+        echo -e "\033[1;31m[x] FAIL ($DURATION s) \033[0m$INSTRUCTION_SUFFIX"
         echo ""
 
         # Log to failure list
@@ -189,21 +188,19 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         if $GENERATE_HTML_REPORT ; then
             generateTestSummary $DEVICE $INSTRUCTION "[x] FAIL."
         fi
-    elif grep -q "org.junit.AssumptionViolatedException" $RUNNING_TEST ; then
+    elif checkTestResult "$SKIPPED_CAUSES" "$RUNNING_TEST" ; then
         echo "RUN ($INSTRUCTION) device ($DEVICE), duration: 0.0 seconds, status: [-] SKIPPED" >> "$TIMES_OUTPUT"
         if $GENERATE_HTML_REPORT ; then
             generateTestSummary $DEVICE $INSTRUCTION "[-] SKIPPED."
         fi
 
-        echo "[-] SKIPPED (0.0 s)"
+        echo "\033[1;30m[-] SKIPPED (0.0 s) \033[0m$INSTRUCTION_SUFFIX"
         echo ""
     else
         # Collect logs on success
-        if $COLLECT_LOGCAT_ON_SUCCESS ; then
-            # adb -s $DEVICE logcat -d -v threadtime > $LOGCAT_FILE
+        if ! $COLLECT_LOGCAT_ON_SUCCESS ; then
             {
-                kill $PID_LOGCAT
-                sleep 1
+                rm $LOGCAT_FILE
             } &> /dev/null
         fi
 
@@ -223,17 +220,14 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         fi
 
         # Pull recording on success
-        if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_SUCCESS)) ; then
-            # PROCESS_START=$(date +%s%3N)
-            echo "Pulling video on success. Succes: $COLLECT_VIDEO_ON_SUCCESS"
+        if (($RECORD_VIDEO_FOR_EACH_TEST) && ($COLLECT_VIDEO_ON_SUCCESS)) || [[ $CURRENT_ATTEMPT -gt 1 && $RECORD_VIDEO_FOR_RERUN && $COLLECT_VIDEO_ON_SUCCESS ]] ; then
             {
                 adb -s $DEVICE pull "$TEST_SDCARD_RECORDING" $RECORDING_FILE
+                adb -s $DEVICE shell rm "$TEST_SDCARD_RECORDING"
             } &> /dev/null
-            # PROCESS_END=$(date +%s%3N)  
-            # echo "Video recording pulled on success, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
         fi
 
-        echo "[/] OK ($DURATION s)"
+        echo -e "\033[1;32m[/] OK ($DURATION s) \033[0m$INSTRUCTION_SUFFIX"
         echo ""
 
         # Log test execution
@@ -243,17 +237,6 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         if $GENERATE_HTML_REPORT ; then
             generateTestSummary $DEVICE $INSTRUCTION "[/] OK."
         fi
-    fi
-
-    # Delete recording from the device
-    if $RECORD_VIDEO_FOR_EACH_TEST ; then
-        # PROCESS_START=$(date +%s%3N)
-        {
-            adb -s $DEVICE shell rm "$TEST_SDCARD_RECORDING"
-            adb -s $DEVICE shell am force-stop "$DEBUG_PACKAGE" 
-        } &> /dev/null
-        # PROCESS_END=$(date +%s%3N)  
-        # echo "Video recording purged from device, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
     fi
 
     EXECUTION_PROGRESS=$(($EXECUTION_PROGRESS+1))
