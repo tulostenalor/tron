@@ -48,7 +48,7 @@ FAILURE_CAUSES="FAILURES!!!,Process crashed while executing,shortMsg=Process cra
 SKIPPED_CAUSES="org.junit.AssumptionViolatedException"
 
 # Rerun
-RUN_ATTEMPTS=2 # how many attempts are being taken before failing an instruction set
+RUN_ATTEMPTS=2 # how many attempts are being taken before failing an instruction set (this includes intital run and rerun if necessary)
 
 # Report
 ## JUnit
