@@ -51,6 +51,29 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
     PREFERENCES_FILE="$TEST_DIRECTORY/$TEST_PREFERENCES_FILE"
     BUGREPORT_FILE="$TEST_DIRECTORY/$TEST_BUGREPORT_FILE"
 
+    # Start video recording
+    if $RECORD_VIDEO_FOR_EACH_TEST ; then
+        # PROCESS_START=$(date +%s%3N)
+        {
+            adb -s $DEVICE shell screenrecord "$TEST_RECORDING_PARAMETERS" "$TEST_SDCARD_RECORDING" &
+            PID_RECORDING=$!
+        } &> /dev/null
+        # PROCESS_END=$(date +%s%3N)
+        # echo "Video recording started, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
+    fi
+
+    # Clear logcat before test start
+    if [[ $COLLECT_LOGCAT_ON_SUCCESS || $COLLECT_LOGCAT_ON_FAILURE ]] ; then
+        # PROCESS_START=$(date +%s%3N)
+        {
+            adb -s $DEVICE logcat -c
+            adb -s $DEVICE logcat -v threadtime > $LOGCAT_FILE &
+            PID_LOGCAT=$!
+        } &> /dev/null
+        # PROCESS_END=$(date +%s%3N)  
+        # echo "Device logs cleared, took: $(convertMilisecondsToSeconds $((PROCESS_END-PROCESS_START))) seconds."
+    fi
+    
     # Obtain class and method names
     INSTRUCTION_CLASS=$(echo $INSTRUCTION | cut -d "#" -f1 | rev | cut -d "." -f1 | rev)
     INSTRUCTION_METHOD=$(echo $INSTRUCTION | cut -d "#" -f2)
@@ -76,7 +99,6 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
 
     CURRENT_ATTEMPT=1
     while [ $CURRENT_ATTEMPT -le $RUN_ATTEMPTS ] ; do
-
         # Additional message when rerunning an instruction set
         if [ $CURRENT_ATTEMPT -gt 1 ] ; then
             echo -e "\033[1;35m[!] Rerunning instruction \033[0m=> \033[1;30mDevice: \033[0m\033[3m$DEVICE | \033[1;30mRerun attempt: \033[0m\033[3m$(($CURRENT_ATTEMPT-1)) $INSTRUCTION_SUFFIX"
@@ -193,7 +215,7 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
         if $GENERATE_HTML_REPORT ; then
             generateTestSummary $DEVICE $INSTRUCTION "[-] SKIPPED."
         fi
-
+        
         echo "\033[1;30m[-] SKIPPED (0.0 s) \033[0m$INSTRUCTION_SUFFIX"
         echo ""
     else
@@ -238,6 +260,5 @@ for INSTRUCTION in $(cat "$INSTRUCTION_SET") ; do
             generateTestSummary $DEVICE $INSTRUCTION "[/] OK."
         fi
     fi
-
     EXECUTION_PROGRESS=$(($EXECUTION_PROGRESS+1))
 done
