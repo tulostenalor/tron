@@ -53,4 +53,5 @@ PROCESS_NUMBER=$2
   adb -s $DEVICE logcat -c
 } &> /dev/null
 
+echo "Preparation complete => $PROCESS_NUMBER for device => $DEVICE"
 echo "$DEVICE" >> "$DEVICE_LIST_PREP_COMPLETE"

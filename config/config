@@ -41,7 +41,14 @@ DEFAULT_PID=-1
 
 # Execution
 ## Prepatation
-CLEAR_DATA_BEFORE_TEST=false
+CLEAR_DATA_FOR_EACH_TEST=false
+
+# Result causes
+FAILURE_CAUSES="FAILURES!!!,Process crashed while executing,shortMsg=Process crashed,Bad component name: class,INSTRUMENTATION_RESULT: longMsg,INSTRUMENTATION_FAILED"
+SKIPPED_CAUSES="org.junit.AssumptionViolatedException"
+
+# Rerun
+RUN_ATTEMPTS=2 # how many attempts are being taken before failing an instruction set (this includes intital run and rerun if necessary)
 
 # Report
 ## JUnit
@@ -51,7 +58,8 @@ GENERATE_JUNIT_REPORT=true
 GENERATE_HTML_REPORT=true
 
 ## Video
-RECORD_VIDEO_FOR_EACH_TEST=true
+RECORD_VIDEO_FOR_EACH_TEST=false
+RECORD_VIDEO_FOR_RERUN=true
 COLLECT_VIDEO_ON_FAILURE=true
 COLLECT_VIDEO_ON_SUCCESS=false
 
@@ -60,8 +68,10 @@ TEST_RECORDING_FILE="recording.mp4"
 TEST_SDCARD_RECORDING="/sdcard/$TEST_RECORDING_FILE"
 
 ## Logcat
+RECORD_LOGCAT_FOR_EACH_TEST=false
+RECORD_LOGCAT_FOR_RERUN=true
 COLLECT_LOGCAT_ON_FAILURE=true
-COLLECT_LOGCAT_ON_SUCCESS=true
+COLLECT_LOGCAT_ON_SUCCESS=false
 TEST_LOGCAT_PARAMETERS="'-v time'"
 TEST_LOGCAT_FILE="logcat.txt"
 

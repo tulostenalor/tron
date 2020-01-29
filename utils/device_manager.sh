@@ -55,7 +55,8 @@ generateDeviceProperties() {
   PROPERTIES_OUTPUT="$TEST_OUTPUT/$DEVICE/device-properties.txt"
 
   mkdir -p "$TEST_OUTPUT/$DEVICE/"
-  echo "productModel:$(adb -s $DEVICE shell getprop ro.product.model)" > "$PROPERTIES_OUTPUT"
+  echo "deviceSerial:$DEVICE" > "$PROPERTIES_OUTPUT"
+  echo "productModel:$(adb -s $DEVICE shell getprop ro.product.model)" >> "$PROPERTIES_OUTPUT"
   echo "productManufactuer:$(adb -s $DEVICE shell getprop ro.product.manufacturer)" >> "$PROPERTIES_OUTPUT"
   echo "buildSdk:$(adb -s $DEVICE shell getprop ro.build.version.sdk)" >> "$PROPERTIES_OUTPUT"
   echo "buildVersion:$(adb -s $DEVICE shell getprop ro.build.version.release)" >> "$PROPERTIES_OUTPUT"

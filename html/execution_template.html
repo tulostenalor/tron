@@ -102,14 +102,18 @@ table td a { display:block; line-height: 24px; color: #ffffff; text-decoration: 
 <body>
 
 <script>
-    function toggleClass(cls) {
-      var lst = document.getElementsByClassName(cls);
-      for(var i = 0; i < lst.length; ++i) {
-          if (lst[i].style.display =='none') {
-            lst[i].style.display =''
-          } else {
-            lst[i].style.display = 'none';
-          }
+  function toggleState(toggleId, tableElements) {
+    var toggleChecked = document.getElementById(toggleId).checked;
+    var listElements = document.getElementsByClassName(tableElements);
+    
+    for(var i = 0; i < listElements.length; ++i) {
+      if (toggleChecked == true) {
+        listElements[i].style.display = '';
+        localStorage.setItem(toggleId, true);
+      } else {
+        listElements[i].style.display = 'none';
+        localStorage.setItem(toggleId, false);
       }
     }
+  }
 </script>

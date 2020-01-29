@@ -85,7 +85,7 @@ for N in "${!CLASS_NAMES[@]}" ; do
 done
 
 # Total test output
-echo "TOTAL INSTRUCTION SETS=$TOTAL_TESTS"
+echo "Total instruction sets => $TOTAL_TESTS"
 
 # If no test have been selected there is no point to continue
 if [ $TOTAL_TESTS -eq 0 ] ; then
