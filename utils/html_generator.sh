@@ -25,8 +25,8 @@ generateTestSummary() {
 
 generateDeviceLabelProperties() {
     DEVICE=$1
-    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
-    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep -c "FAIL")
+    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep -c "SKIPPED")
 
     if [ $FAILED -gt 0 ] ; then
         echo "bgcolor=\"#990000\""
@@ -39,8 +39,8 @@ generateDeviceLabelProperties() {
 
 generateClassLabelProperties() {
     CLASS=$1
-    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$CLASS" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
-    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$CLASS" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$CLASS" | grep -c "FAIL")
+    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$CLASS" | grep -c "SKIPPED")
 
     if [ $FAILED -gt 0 ] ; then
         echo "bgcolor=\"#cc0000\" class=\"failedTest\""
@@ -54,8 +54,8 @@ generateClassLabelProperties() {
 generateTestLabelProperties() {
     DEVICE=$1
     TEST=$2
-    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
-    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep -c "FAIL")
+    SKIPPED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep -c "SKIPPED")
 
     if [ $FAILED -gt 0 ] ; then
         echo "bgcolor=\"#ff3300\" class=\"failedTest\""
@@ -69,7 +69,7 @@ generateTestLabelProperties() {
 generateTestLabelSufix() {
     DEVICE=$1
     TEST=$2
-    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep "FAIL" | wc -l | tr -d "\n\t\r ")
+    FAILED=$(cat $TIMES_OUTPUT | grep "$DEVICE" | grep "$TEST)" | grep -c "FAIL")
 
     if [ $FAILED -gt 0 ] ; then
         echo "[x] FAIL"
@@ -92,11 +92,11 @@ generateHtmlExecutionSummary() {
 
     cp ./html/execution_template.html "$EXECUTION_SUMMARY"
 
-    NUMBER_OF_DEVICES=$(cat $DEVICE_LIST_OUTPUT | wc -l | tr -d "\n\t\r ")
-    NUMBER_OF_TOTAL_TESTS=$(cat $TIMES_OUTPUT | wc -l | tr -d "\n\t\r ")
-    NUMBER_OF_PASSING_TESTS=$(cat $TIMES_OUTPUT | grep "OK" | wc -l | tr -d "\n\t\r ")
-    NUMBER_OF_FAILING_TESTS=$(cat $TIMES_OUTPUT | grep "FAIL" | wc -l | tr -d "\n\t\r ")
-    NUMBER_OF_SKIPPED_TESTS=$(cat $TIMES_OUTPUT | grep "SKIPPED" | wc -l | tr -d "\n\t\r ")
+    NUMBER_OF_DEVICES=$(cat $DEVICE_LIST_OUTPUT | wc -l)
+    NUMBER_OF_TOTAL_TESTS=$(cat $TIMES_OUTPUT | wc -l)
+    NUMBER_OF_PASSING_TESTS=$(cat $TIMES_OUTPUT | grep -c "OK")
+    NUMBER_OF_FAILING_TESTS=$(cat $TIMES_OUTPUT | grep -c "FAIL")
+    NUMBER_OF_SKIPPED_TESTS=$(cat $TIMES_OUTPUT | grep -c "SKIPPED")
 
     echo "<div id="testSummary">
             <h1>Execution summary</h1>
