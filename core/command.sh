@@ -214,15 +214,6 @@ while true ; do
     EXECUTION_PROGRESS=$(($EXECUTION_PROGRESS+1))
 done
 
-# Generate JUnit report based on flag and execution mode
-if $GENERATE_JUNIT_REPORT ; then
-    if $CONCURRENT ; then
-        generateConcurrentJunitReport
-    else
-        generateJunitReport
-    fi
-fi
-
 # Capture end time
 END_TIME=$(getCurrentDate)
 TOTAL_DURATION=$(convertMilisecondsToMinutesSeconds $((END_TIME-START_TIME)))
@@ -232,6 +223,29 @@ echo "****"
 echo -e "Total duration: \033[1;30m$TOTAL_DURATION\033[0m"
 echo "****"
 
+export ALL_TIMES=$(cat $TIMES_OUTPUT)
+export ALL_DEVICES=$(cat $DEVICE_LIST_OUTPUT)
+
+# Generate HTML report based on flag
 if $GENERATE_HTML_REPORT ; then
+    START_TIME=$(getCurrentDate)
     generateHtmlExecutionSummary "$TOTAL_DURATION"
+    END_TIME=$(getCurrentDate)
+
+    DURATION=$(convertMilisecondsToSeconds $((END_TIME-START_TIME)))
+    echo "Generating HTML report took: $DURATION s."
+fi
+
+# Generate JUnit report based on flag and execution mode
+if $GENERATE_JUNIT_REPORT ; then
+    START_TIME=$(getCurrentDate)
+    if $CONCURRENT ; then
+        generateConcurrentJunitReport
+    else
+        generateJunitReport
+    fi
+    END_TIME=$(getCurrentDate)
+
+    DURATION=$(convertMilisecondsToSeconds $((END_TIME-START_TIME)))
+    echo "Generating JUnit report took: $DURATION s."
 fi
