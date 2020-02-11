@@ -223,9 +223,6 @@ echo "****"
 echo -e "Total duration: \033[1;30m$TOTAL_DURATION\033[0m"
 echo "****"
 
-export ALL_TIMES=$(cat $TIMES_OUTPUT)
-export ALL_DEVICES=$(cat $DEVICE_LIST_OUTPUT)
-
 # Generate HTML report based on flag
 if $GENERATE_HTML_REPORT ; then
     START_TIME=$(getCurrentDate)
