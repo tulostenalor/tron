@@ -34,7 +34,7 @@ generateDeviceStatus() {
     elif [ $(echo "$RESULT" | grep -c "SKIPPED") -gt 0 ] ; then
         echo "skip"
     else
-        exit 1
+        echo "error"
     fi
 }
 
@@ -49,7 +49,7 @@ generateClassStatus() {
     elif [ $(echo "$RESULT" | grep -c "SKIPPED") -gt 0 ] ; then
         echo "skip"
     else
-        exit 1
+        echo "error"
     fi
 }
 
@@ -62,7 +62,7 @@ generateTestLabelStatus() {
     elif [ $(echo "$RESULT" | grep -c "SKIPPED") -eq 1 ] ; then
         echo "skip"
     else
-        exit 1
+        echo "error"
     fi
 }
 
@@ -84,6 +84,8 @@ generateDeviceTestList() {
         DEVICE_PROPERTIES="bgcolor=\"#990000\""
     elif [ "$DEVICE_STATUS" == "skip" ] ; then
         DEVICE_PROPERTIES="bgcolor=\"#808080\""
+    elif [ "$DEVICE_STATUS" == "error" ] ; then
+        echo "There has been a problem with status for device -> $DEVICE"        
     else
         exit 1
     fi
@@ -112,6 +114,8 @@ generateDeviceTestList() {
                     CLASS_PROPERTIES="bgcolor=\"#cc0000\" class=\"failedTest\""
                 elif [ "$CLASS_STATUS" == "skip" ] ; then
                     CLASS_PROPERTIES="bgcolor=\"#8c8c8c\" class=\"skippedTest\""
+                elif [ "$CLASS_STATUS" == "error" ] ; then
+                    echo "There has been a problem with status for class -> $CLASS_NAME ($DEVICE)"
                 else
                     exit 1
                 fi
@@ -132,7 +136,7 @@ generateDeviceTestList() {
             TEST_PROPERTIES="bgcolor=\"#99cc00\" class=\"passedTest\""
             TEST_SUFIX=""
         else
-            TEST_STATUS=$(generateTestLabelStatus "$(echo "$DEVICE_INSTRUCTIONS" | grep $TEST)")
+            TEST_STATUS=$(generateTestLabelStatus "$(echo "$DEVICE_INSTRUCTIONS" | grep "($TEST)")")
 
             if [ "$TEST_STATUS" == "pass" ] ; then
                 TEST_PROPERTIES="bgcolor=\"#99cc00\" class=\"passedTest\""
@@ -143,6 +147,8 @@ generateDeviceTestList() {
             elif [ "$TEST_STATUS" == "skip" ] ; then
                 TEST_PROPERTIES="bgcolor=\"#999999\" class=\"skippedTest\""
                 TEST_SUFIX="[-] SKIPPED"
+            elif [ "$TEST_STATUS" == "error" ] ; then
+                echo "There has been a problem with status for test -> $TEST ($DEVICE)"    
             else
                 exit 1
             fi
@@ -155,16 +161,16 @@ generateDeviceTestList() {
 
 generateHtmlExecutionSummary() {
     TOTAL_DURATION=$1
-    DEVICE_LIST=$(echo "$ALL_DEVICES")
+    DEVICE_LIST=$(cat $DEVICE_LIST_OUTPUT)
     EXECUTION_SUMMARY="$TEST_OUTPUT/index.html"
 
     cp ./html/execution_template.html "$EXECUTION_SUMMARY"
 
-    NUMBER_OF_DEVICES=$(echo "$ALL_DEVICES" | wc -l)
-    NUMBER_OF_TOTAL_TESTS=$(echo "$ALL_TIMES" | wc -l)
-    NUMBER_OF_PASSING_TESTS=$(echo "$ALL_TIMES" | grep -c "OK")
-    NUMBER_OF_FAILING_TESTS=$(echo "$ALL_TIMES" | grep -c "FAIL")
-    NUMBER_OF_SKIPPED_TESTS=$(echo "$ALL_TIMES" | grep -c "SKIPPED")
+    NUMBER_OF_DEVICES=$(echo "$DEVICE_LIST" | wc -l)
+    NUMBER_OF_TOTAL_TESTS=$(cat "$TIMES_OUTPUT" | wc -l)
+    NUMBER_OF_PASSING_TESTS=$(cat "$TIMES_OUTPUT" | grep -c "OK")
+    NUMBER_OF_FAILING_TESTS=$(cat "$TIMES_OUTPUT" | grep -c "FAIL")
+    NUMBER_OF_SKIPPED_TESTS=$(cat "$TIMES_OUTPUT" | grep -c "SKIPPED")
 
     echo "<div id="testSummary">
             <h1>Execution summary</h1>

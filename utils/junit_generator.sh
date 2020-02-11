@@ -67,14 +67,14 @@ generateJunitReport() {
         TEST_DURATION=$(echo "$DEVICE_INSTRUCTIONS" | grep "$TEST" | cut -d " " -f6 | tr -d "\n\t\r ")
 
         # Generte output based on results
-        if [ $(echo "$TEST" | grep -c "[/]") -eq 1 ] ; then
+        if [ $(echo "$DEVICE_INSTRUCTIONS" | grep "$TEST" | grep -c "[/]") -eq 1 ] ; then
             echo -e "\t<testcase classname=\"$CLASS_NAME\" name=\"$TEST_NAME\" time=\"$TEST_DURATION\" />" >> $REPORT_PATH
-        elif [ $(echo "$TEST" | grep -c "FAIL") -eq 1 ] ; then
+        elif [ $(echo "$DEVICE_INSTRUCTIONS" | grep "$TEST" | grep -c "FAIL") -eq 1 ] ; then
             TEST_HASH=$(getHash "$TEST")
             if [ $# -eq 0 ] ; then
-                TEST_SUMMARY="./*/$TEST_HASH/running-test.txt"
+                TEST_SUMMARY="./test-results/*/$TEST_HASH/running-test.txt"
             else
-                TEST_SUMMARY="./$DEVICE/$TEST_HASH/running-test.txt"
+                TEST_SUMMARY="./test-results/$DEVICE/$TEST_HASH/running-test.txt"
             fi
 
             FAILURE_LINE=$(cat $TEST_SUMMARY | grep -n "There was 1 failure:" | cut -d ":" -f1 | tr -d "<>&\n\t\r ")
